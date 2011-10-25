@@ -8,17 +8,12 @@ define('C_COLOR', chr(3));
 define('C_ITALIC', chr(29));
 define('C_REVERSE', chr(22));
 define('C_UNDERLINE', chr(31)); 
-$config = file_get_contents('ircconfig.conf');
-$config = explode("\n",$config);
-$settings = array();
-foreach ($config as $setting) {
-	$setting = explode("=",$setting,2);
-	$settings[trim($setting[0])] = trim($setting[1]);
-}
+$settings = parse_ini_file('ircconfig.ini');
 // add some essential command mappings
 $commands = array(
 	'load'=>'module_load',
-	'unload'=>'module_unload'
+	'unload'=>'module_unload',
+	'list'=>'command_list'
 );
 // preload some modules
 $premods = explode(',',$settings['module_preload']);
@@ -121,7 +116,22 @@ function send($raw) {
 	echo '[OUT]' . "\t" . $raw . "\n";
 }
 function send_msg($target,$message) {
-	send('PRIVMSG ' . $target . ' :' . $message);
+	global $nick,$settings;
+	// Let's chunk up the message so it all gets sent.
+	$message = str_split($message,intval($settings['maxlen']));
+	var_dump($message);
+	if (count($message)>intval($settings['maxsend'])) {
+		// We want to use maxsend-1 in this situation because we'll be appending an error telling the user what
+		// exactly happened to the rest of their output.
+		$message = array_slice($message,0,intval($settings['maxsend']-1));
+		var_dump($message);
+		$message[] = $nick . ': The output for your command was too long to send fully.';
+		var_dump($message);
+	}
+	var_dump($message);
+	foreach ($message as $msg) {
+		send ('PRIVMSG ' . $target . ' :' . $msg);
+	}
 }
 function module_unload() {
 	global $admin,$buffwords,$commands,$nick,$function_map;
@@ -169,5 +179,28 @@ function module_reload() {
 	} else {
 		return false;
 	}
+}
+function command_list() {
+	global $commands,$buffwords,$nick;
+	foreach ($commands as $command => $function) {
+		$ocomm[] = $command;
+	}
+	$ocomm = implode(', ',$ocomm);
+	send_msg($buffwords[2],$nick . ': ' . $ocomm);
+}
+// borrowed from gtoxic of avestribot, who borrowed it from somebody else...
+function write_php_ini($array, $file) {
+	$res = array();
+	foreach($array as $key => $val) {
+		if(is_array($val)) {
+			$res[] = "[$key]";
+			foreach($val as $skey => $sval) $res[] = "$skey = ".(is_numeric($sval) ? $sval : '"'.$sval.'"');
+		} else {
+			$res[] = "$key = ".(is_numeric($val) ? $val : '"'.$val.'"');
+		}
+	}
+	$res = implode("\r\n", $res);
+	$res = '; IRC bot config file
+	; For more info, check the README' . "\r\n" . $res;
 }
 ?> 
