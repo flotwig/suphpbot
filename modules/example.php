@@ -3,34 +3,17 @@
 // must be the same as the name of the .php file. So, the mapping array for
 // example.php would be $function_map['example'].
 $function_map['example'] = array(
-	'rainbow'=>'rainbow6',
-	'ai'=>'ai2'
+	'test'=>'test_function'
 );
 // Define those functions, yo.
-function rainbow6() {
-	global $buffwords;
-	$channel = $buffwords[2];
-	$buffwords[0]=NULL; $buffwords[1]=NULL; $buffwords[2]=NULL; $buffwords[3]=NULL;
-	$echo = trim(implode(' ',$buffwords));
-	$echo = str_split($echo);
-	$rainbows = '';
-	$i=0;
-	$rainbow = array('07','04','08','03','12','06','07');
-	foreach ($echo as $char) {
-		$rainbows .= C_COLOR . $rainbow[$i] . $char;
-		$i++;
-		if ($i==count($rainbow)) {
-			$i=0;
-		}
+function test_function() {
+	// Let's globalize some of the variables we'll need for this command
+	global $buffwords,$admin,$nick;
+	if ($admin) {
+		// He's an admin! Let's PRIVMSG the channel and tell them so.
+		send_msg($buffwords[2],$nick . ' is an admin.');
+	} else {
+		// Not an admin...
+		send_msg($buffwords[2],$nick . ' is not an admin. Too bad.');
 	}
-	send_msg($channel,$rainbows);
-}
-function ai2() {
-	global $buffwords,$nick;
-	$channel = $buffwords[2];
-	$buffwords[0]=NULL; $buffwords[1]=NULL; $buffwords[2]=NULL; // $buffwords[3]=NULL;
-	$echo = trim(implode(' ',$buffwords));
-	$ai = file_get_contents('http://query.yahooapis.com/v1/public/yql?q=' . urlencode('select * from xml where url="http://www.pandorabots.com/pandora/talk-xml?botid=f5d922d97e345aa1&input=' . urlencode($echo) . '&custid=' . $nick . '"') . '&format=json');
-	$ai = json_decode($ai,TRUE);
-	send_msg($channel,$ai['query']['results']['result']['that']);
 }

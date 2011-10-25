@@ -81,28 +81,28 @@ while (1) {
 				if (in_array($nick,$ignore)) {
 					// do nothing - we're ignoring them :p
 				} elseif ($command=="whoami") {
-					send_msg($buffwords[2],$nick . ': You are ' . $nick . '.');
+					send_msg($buffwords[2],'You are ' . $nick . '.');
 				} elseif ($command=='echo') {
 					if ($admin) {
 						$channel = $buffwords[2];
 						$buffwords[0]=NULL; $buffwords[1]=NULL; $buffwords[2]=NULL; $buffwords[3]=NULL;
 						$echo = trim(implode(' ',$buffwords));
-						send_msg($channel,$nick . ': ' . $echo);
+						send_msg($channel,'' . $echo);
 					} else {
-						send_msg($buffwords[2],$nick . ': You don\'t have the permissions required to execute this command.');
+						send_msg($buffwords[2],'You don\'t have the permissions required to execute this command.');
 					}
 				} elseif ($command=='quit'||$command=='end'||$command=='close') {
 					if ($admin) {
 						send('QUIT :' . $settings['quitmsg']);
 						die();
 					} else {
-						send_msg($buffwords[2],$nick . ': If you really want to quit so bad, maybe you should identify as an admin first!');
+						send_msg($buffwords[2],'If you really want to quit so bad, maybe you should identify as an admin first!');
 					}
 				} else {
 				if (function_exists($commands[$command])) {
 					call_user_func($commands[$command]);
 				} else {
-					send_msg($buffwords[2],$nick . ': ' . $command . ' is not a valid command. Maybe you need to load a plugin?');
+					send_msg($buffwords[2],'' . $command . ' is not a valid command. Maybe you need to load a plugin?');
 				}
 				}
 			}
@@ -125,12 +125,12 @@ function send_msg($target,$message) {
 		// exactly happened to the rest of their output.
 		$message = array_slice($message,0,intval($settings['maxsend']-1));
 		var_dump($message);
-		$message[] = $nick . ': The output for your command was too long to send fully.';
+		$message[] = 'The output for your command was too long to send fully.';
 		var_dump($message);
 	}
 	var_dump($message);
 	foreach ($message as $msg) {
-		send ('PRIVMSG ' . $target . ' :' . $msg);
+		send ('PRIVMSG ' . $target . ' :' . $nick .  ': ' . $msg);
 	}
 }
 function module_unload() {
@@ -144,14 +144,14 @@ function module_unload() {
 				runkit_function_remove($function);
 			} */
 			$commands = array_diff($commands,$function_map[$module]);
-			send_msg($buffwords[2],$nick . ': Module unloaded successfully!');
+			send_msg($buffwords[2],'Module unloaded successfully!');
 			return true;
 		} else {
-			send_msg($buffwords[2],$nick . ': Module not loaded.');
+			send_msg($buffwords[2],'Module not loaded.');
 			return false;
 		}
 	} else {
-		send_msg($buffwords[2],$nick . ': You need to be identified as an administrator to unload plugins.');
+		send_msg($buffwords[2],'You need to be identified as an administrator to unload plugins.');
 		return false;
 	}
 }
@@ -162,14 +162,14 @@ function module_load() {
 		if (file_exists('./modules/' . $module . '.php')) {
 			include('./modules/' . $module . '.php');
 			$commands = array_merge($commands,$function_map[$module]);
-			send_msg($buffwords[2],$nick . ': Plugin loaded.');
+			send_msg($buffwords[2],'Plugin loaded.');
 			return true;
 		} else {
-			send_msg($buffwords[2],$nick . ': Plugin not loaded. Does it exist?');
+			send_msg($buffwords[2],'Plugin not loaded. Does it exist?');
 			return false;
 		}
 	} else {
-		send_msg($buffwords[2],$nick . ': You need to be identified as an administrator to load plugins.');
+		send_msg($buffwords[2],'You need to be identified as an administrator to load plugins.');
 		return false;
 	}
 }
@@ -186,7 +186,7 @@ function command_list() {
 		$ocomm[] = $command;
 	}
 	$ocomm = implode(', ',$ocomm);
-	send_msg($buffwords[2],$nick . ': ' . $ocomm);
+	send_msg($buffwords[2],'' . $ocomm);
 }
 // borrowed from gtoxic of avestribot, who borrowed it from somebody else...
 function write_php_ini($array, $file) {
