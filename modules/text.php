@@ -8,11 +8,8 @@ $function_map['text'] = array(
 	'italic'=>'text_italic'
 );
 function text_rainbow() {
-	global $buffwords;
-	$channel = $buffwords[2];
-	$buffwords[0]=NULL; $buffwords[1]=NULL; $buffwords[2]=NULL; $buffwords[3]=NULL;
-	$echo = trim(implode(' ',$buffwords));
-	$echo = str_split($echo);
+	global $channel,$arguments;
+	$echo = str_split($arguments);
 	$rainbows = '';
 	$i=0;
 	$rainbow = array('07','04','08','03','12','06','07');
@@ -26,22 +23,21 @@ function text_rainbow() {
 	send_msg($channel,$rainbows);
 }
 function text_bold() {
-	global $buffwords,$buffer;
+	global $buffwords,$arguments;
 	$text = explode($settings['commandchar'] . 'bold ',2);
-	send_msg($buffwords[2],C_BOLD . $text[1]);
+	send_msg($buffwords[2],C_BOLD . $arguments);
 }
 function text_reverse() {
-	global $buffwords,$buffer;
-	$text = explode($settings['commandchar'] . 'reverse ',2);
-	send_msg($buffwords[2],C_REVERSE . $text[1]);
+	global $buffwords,$arguments;
+	send_msg($buffwords[2],C_REVERSE . $arguments);
 }
 function text_underline() {
-	global $buffwords,$buffer;
+	global $buffwords,$arguments;
 	$text = explode($settings['commandchar'] . 'underline ',2);
-	send_msg($buffwords[2],C_UNDERLINE . $text[1]);
+	send_msg($buffwords[2],C_UNDERLINE . $arguments);
 }
 function text_italic() {
-	global $buffwords,$buffer;
+	global $buffwords,$arguments;
 	$text = explode($settings['commandchar'] . 'italic ',2);
-	send_msg($buffwords[2],C_ITALIC . $text[1]);
+	send_msg($buffwords[2],C_ITALIC . $arguments);
 }

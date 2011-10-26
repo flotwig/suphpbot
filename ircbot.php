@@ -45,6 +45,10 @@ while (1) {
 			$buffwords = explode(' ',$buffer);
 			$nick = explode('!',$buffwords[0]);
 			$nick = substr($nick[0],1);
+			$channel = $buffwords[2];
+			$bw = $buffwords;
+			$bw[0]=NULL; $bw[1]=NULL; $bw[2]=NULL; $bw[3]=NULL;
+			$arguments = trim(implode(' ',$bw));
 			if ($buffwords[1]=='002') {
 				// The server just sent us something. We're in.
 				if ($settings['nickserv_pass']!=='') {
