@@ -87,24 +87,6 @@ while (1) {
 					$lastsent[$nick]=time();
 					if (in_array($nick,$ignore)) {
 						// do nothing - we're ignoring them :p
-					} elseif ($command=="whoami") {
-						send_msg($buffwords[2],'You are ' . $nick . '.');
-					} elseif ($command=='echo') {
-						if ($admin) {
-							$channel = $buffwords[2];
-							$buffwords[0]=NULL; $buffwords[1]=NULL; $buffwords[2]=NULL; $buffwords[3]=NULL;
-							$echo = trim(implode(' ',$buffwords));
-							send_msg($channel,'' . $echo);
-						} else {
-							send_msg($buffwords[2],'You don\'t have the permissions required to execute this command.');
-						}
-					} elseif ($command=='quit'||$command=='end'||$command=='close') {
-						if ($admin) {
-							send('QUIT :' . $settings['quitmsg']);
-							die();
-						} else {
-							send_msg($buffwords[2],'If you really want to quit so bad, maybe you should identify as an admin first!');
-						}
 					} else {
 						if (function_exists($commands[$command])) {
 							call_user_func($commands[$command]);
@@ -140,56 +122,6 @@ function send_msg($target,$message) {
 	foreach ($message as $msg) {
 		send ('PRIVMSG ' . $target . ' :' . C_BOLD . $nick .  ': ' . C_BOLD . xtrim($msg));
 	}
-}
-function module_unload() {
-	global $admin,$buffwords,$commands,$nick,$function_map;
-	if ($admin) {
-		$module = end(explode('/',$buffwords[4]));
-		if (is_array($function_map[$module])) {
-			$commands = array_diff($commands,$function_map[$module]);
-			send_msg($buffwords[2],'Module unloaded successfully!');
-			return true;
-		} else {
-			send_msg($buffwords[2],'Module not loaded.');
-			return false;
-		}
-	} else {
-		send_msg($buffwords[2],'You need to be identified as an administrator to unload plugins.');
-		return false;
-	}
-}
-function module_load() {
-	global $admin,$buffwords,$commands,$nick,$function_map;
-	if ($admin) {
-		$module = end(explode('/',$buffwords[4]));
-		if (file_exists('./modules/' . $module . '.php')) {
-			include('./modules/' . $module . '.php');
-			$commands = array_merge($commands,$function_map[$module]);
-			send_msg($buffwords[2],'Plugin loaded.');
-			return true;
-		} else {
-			send_msg($buffwords[2],'Plugin not loaded. Does it exist?');
-			return false;
-		}
-	} else {
-		send_msg($buffwords[2],'You need to be identified as an administrator to load plugins.');
-		return false;
-	}
-}
-function module_reload() {
-	if (module_unload()) {
-		return module_load();
-	} else {
-		return false;
-	}
-}
-function command_list() {
-	global $commands,$buffwords,$nick;
-	foreach ($commands as $command => $function) {
-		$ocomm[] = $command;
-	}
-	$ocomm = implode(', ',$ocomm);
-	send_msg($buffwords[2],'' . $ocomm);
 }
 // borrowed from gtoxic of avestribot, who borrowed it from somebody else...
 function write_php_ini($array, $file) {
