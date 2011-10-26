@@ -23,6 +23,7 @@ foreach ($premods as $premod) {
 }
 $admins = explode(',',$settings['admins']);
 $ignore = explode(',',$settings['ignore']);
+$lastsent = array(); // Array of timestamps for last command from nicks - helps prevent flooding
 while (1) {
 	$socket = fsockopen($settings['server'], $settings['port'], $errno, $errstr, 20);
 	if (!$socket) {
@@ -82,32 +83,35 @@ while (1) {
 					}
 				}
 				$command = trim(substr($buffwords[3],2));
-				if (in_array($nick,$ignore)) {
-					// do nothing - we're ignoring them :p
-				} elseif ($command=="whoami") {
-					send_msg($buffwords[2],'You are ' . $nick . '.');
-				} elseif ($command=='echo') {
-					if ($admin) {
-						$channel = $buffwords[2];
-						$buffwords[0]=NULL; $buffwords[1]=NULL; $buffwords[2]=NULL; $buffwords[3]=NULL;
-						$echo = trim(implode(' ',$buffwords));
-						send_msg($channel,'' . $echo);
+				if ($lastsent[$nick]<(time()-$settings['floodtimer'])) {
+					$lastsent[$nick]=time();
+					if (in_array($nick,$ignore)) {
+						// do nothing - we're ignoring them :p
+					} elseif ($command=="whoami") {
+						send_msg($buffwords[2],'You are ' . $nick . '.');
+					} elseif ($command=='echo') {
+						if ($admin) {
+							$channel = $buffwords[2];
+							$buffwords[0]=NULL; $buffwords[1]=NULL; $buffwords[2]=NULL; $buffwords[3]=NULL;
+							$echo = trim(implode(' ',$buffwords));
+							send_msg($channel,'' . $echo);
+						} else {
+							send_msg($buffwords[2],'You don\'t have the permissions required to execute this command.');
+						}
+					} elseif ($command=='quit'||$command=='end'||$command=='close') {
+						if ($admin) {
+							send('QUIT :' . $settings['quitmsg']);
+							die();
+						} else {
+							send_msg($buffwords[2],'If you really want to quit so bad, maybe you should identify as an admin first!');
+						}
 					} else {
-						send_msg($buffwords[2],'You don\'t have the permissions required to execute this command.');
+						if (function_exists($commands[$command])) {
+							call_user_func($commands[$command]);
+						} else {
+							send_msg($buffwords[2],'' . $command . ' is not a valid command. Maybe you need to load a plugin?');
+						}
 					}
-				} elseif ($command=='quit'||$command=='end'||$command=='close') {
-					if ($admin) {
-						send('QUIT :' . $settings['quitmsg']);
-						die();
-					} else {
-						send_msg($buffwords[2],'If you really want to quit so bad, maybe you should identify as an admin first!');
-					}
-				} else {
-				if (function_exists($commands[$command])) {
-					call_user_func($commands[$command]);
-				} else {
-					send_msg($buffwords[2],'' . $command . ' is not a valid command. Maybe you need to load a plugin?');
-				}
 				}
 			}
 		}
