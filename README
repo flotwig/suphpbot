@@ -2,3 +2,49 @@ phpbot - A modular, non-OOP IRC bot written entirely in PHP
 Version 0.1b - http://za.chary.us/ - zbloomq@live.com
 =================================================
 This is an IRC bot.
+=================================================
+1. INSTALLATION
+=================================================
+I highly recommend that you /not/ put this in a web-accessible
+location. The bot must be run from a command-line for optimal
+performance. Here are the requirements for installation:
+	* PHP 5 or higher
+	* Access to a shell account on your server
+	* Sockets enabled on your PHP installation
+That's pretty much it. To get started, first open the ircconfig.ini
+file in a text editor such as Notepad or gedit. Change the lines to
+match the values you need to connect to your IRC server. 
+Information about the various configuration options can be found
+within the ircconfig.ini file itself.
+NOTE: If you are planning to run this on a web server, ircconfig.ini
+can be downloaded by users. I recommend blocking access to it
+using .htaccess.
+=================================================
+2. RUNNING THE BOT
+=================================================
+To run the bot, open up a shell and navigate to the directory
+where you extracted the files to. If you want to run it in the
+background as a service, use this command:
+	php ./ircbot.php >> /dev/null &
+If something is going wrong and you want to run it with verbose
+console output, use this command:
+	php ./ircbot.php
+=================================================
+3. GENERAL BOT ADMINISTRATION
+=================================================
+To identify as an admin to the bot, you must fulfill 2 requirements:
+	1) Your nick must be in the 'admin' configuration variable, and
+	2) You must be identified to NickServ on your IRC server.
+To send a command to the bot, type your command character and
+the name of the command next to eachother into a channel in
+which the bot is present. For example, if you wanted to ping the bot:
+	~ping
+[the default command character is ~]
+Here is a list of the central core commands:
+	* load [module name here] - Loads a phpbot module so its
+	commands can be used.
+	* unload [module name here] - Unloads a phpbot module from
+	the command list.
+	* list - Sends a list of the currently available commands.
+	* whoami - Tells you who you are.
+	* quit - Quits the IRC network and kills the bot.

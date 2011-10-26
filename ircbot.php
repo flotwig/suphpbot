@@ -138,6 +138,8 @@ function write_php_ini($array, $file) {
 	$res = '; IRC bot config file
 	; For more info, check the README' . "\r\n" . $res;
 }
+// supertrim function by jose cruz
+// josecruz at josecruz dot com dot br
 function xtrim($str) {
     $str = trim($str);
     for($i=0;$i < strlen($str);$i++) {

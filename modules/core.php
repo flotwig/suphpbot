@@ -4,7 +4,6 @@
 $function_map['core'] = array(
 	'load'=>'core_module_load',
 	'unload'=>'core_module_unload',
-	'reload'=>'core_module_reload',
 	'list'=>'core_command_list',
 	'quit'=>'core_quit',
 	'echo'=>'core_echo',
@@ -59,13 +58,6 @@ function core_module_load() {
 		}
 	} else {
 		send_msg($buffwords[2],'You need to be identified as an administrator to load plugins.');
-		return false;
-	}
-}
-function core_module_reload() {
-	if (module_unload()) {
-		return module_load();
-	} else {
 		return false;
 	}
 }
