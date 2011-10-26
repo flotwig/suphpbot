@@ -47,6 +47,7 @@ while (1) {
 			$nick = explode('!',$buffwords[0]);
 			$nick = substr($nick[0],1);
 			$channel = $buffwords[2];
+			$hostname = end(explode('@',$buffwords[0]));
 			$bw = $buffwords;
 			$bw[0]=NULL; $bw[1]=NULL; $bw[2]=NULL; $bw[3]=NULL;
 			$arguments = trim(implode(' ',$bw));
@@ -83,8 +84,8 @@ while (1) {
 					}
 				}
 				$command = trim(substr($buffwords[3],2));
-				if ($lastsent[$nick]<(time()-$settings['floodtimer'])) {
-					$lastsent[$nick]=time();
+				if ($lastsent[$hostname]<(time()-$settings['floodtimer'])) {
+					$lastsent[$hostname]=time();
 					if (in_array($nick,$ignore)) {
 						// do nothing - we're ignoring them :p
 					} else {
