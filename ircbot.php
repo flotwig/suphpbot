@@ -138,11 +138,6 @@ function module_unload() {
 	if ($admin) {
 		$module = end(explode('/',$buffwords[4]));
 		if (is_array($function_map[$module])) {
-			/* I've decided not to runkit_function_remove the functions because not many configurations support it
-			and it makes me feel dirty.
-			foreach ($function_map[$module] as $command=>$function) {
-				runkit_function_remove($function);
-			} */
 			$commands = array_diff($commands,$function_map[$module]);
 			send_msg($buffwords[2],'Module unloaded successfully!');
 			return true;

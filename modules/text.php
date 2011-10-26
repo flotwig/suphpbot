@@ -27,21 +27,21 @@ function text_rainbow() {
 }
 function text_bold() {
 	global $buffwords,$buffer;
-	$text = explode($settings['commandchar'] . 'bold ',$buffer,2);
+	$text = explode($settings['commandchar'] . 'bold ',2);
 	send_msg($buffwords[2],C_BOLD . $text[1]);
 }
 function text_reverse() {
 	global $buffwords,$buffer;
-	$text = explode($settings['commandchar'] . 'reverse ',$buffer,2);
+	$text = explode($settings['commandchar'] . 'reverse ',2);
 	send_msg($buffwords[2],C_REVERSE . $text[1]);
 }
 function text_underline() {
 	global $buffwords,$buffer;
-	$text = explode($settings['commandchar'] . 'underline ',$buffer,2);
+	$text = explode($settings['commandchar'] . 'underline ',2);
 	send_msg($buffwords[2],C_UNDERLINE . $text[1]);
 }
 function text_italic() {
 	global $buffwords,$buffer;
-	$text = explode($settings['commandchar'] . 'italic ',$buffer,2);
+	$text = explode($settings['commandchar'] . 'italic ',2);
 	send_msg($buffwords[2],C_ITALIC . $text[1]);
 }
