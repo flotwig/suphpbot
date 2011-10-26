@@ -134,7 +134,7 @@ function send_msg($target,$message) {
 	}
 	var_dump($message);
 	foreach ($message as $msg) {
-		send ('PRIVMSG ' . $target . ' :' . $nick .  ': ' . $msg);
+		send ('PRIVMSG ' . $target . ' :' . C_BOLD . $nick .  ': ' . C_BOLD . xtrim($msg));
 	}
 }
 function module_unload() {
@@ -202,4 +202,19 @@ function write_php_ini($array, $file) {
 	$res = '; IRC bot config file
 	; For more info, check the README' . "\r\n" . $res;
 }
+function xtrim($str) {
+    $str = trim($str);
+    for($i=0;$i < strlen($str);$i++) {
+        if(substr($str, $i, 1) != " ") {
+            $ret_str .= trim(substr($str, $i, 1));
+        } else  {
+            while(substr($str,$i,1) == " ") {
+                $i++;
+            }
+            $ret_str.= " ";
+            $i--; // ***
+        }
+    }
+    return $ret_str;
+} 
 ?> 
