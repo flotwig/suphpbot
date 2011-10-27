@@ -32,9 +32,14 @@ console output, use this command:
 =================================================
 3. GENERAL BOT ADMINISTRATION
 =================================================
-To identify as an admin to the bot, you must fulfill 2 requirements:
-	1) Your nick must be in the 'admin' configuration variable, and
-	2) You must be identified to NickServ on your IRC server.
+To identify as an admin to the bot, first register a user. Type this into
+your irc client to create your account:
+	/msg [name of bot] register [username] [password]
+Then, to make yourself an admin, open the file data/users.csv and
+set the last field from 0 to 1. Now, you can type
+	/msg [name of bot] identify [username] [password]
+to log in to the bot. All passwords are hashed using the secure SHA256
+algorithm.
 To send a command to the bot, type your command character and
 the name of the command next to eachother into a channel in
 which the bot is present. For example, if you wanted to ping the bot:
