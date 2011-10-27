@@ -8,8 +8,12 @@ $function_map['core'] = array(
 	'quit'=>'core_quit',
 	'echo'=>'core_echo',
 	'whoami'=>'core_whoami',
-	'ping'=>'core_ping'
+	'ping'=>'core_ping',
+	'reload'=>'core_reload'
 );
+function core_reload() {
+	load_settings();
+}
 function core_ping() {
 	global $channel;
 	send_msg($channel,'pong');
@@ -62,13 +66,22 @@ function core_module_load() {
 	}
 }
 function core_command_list() {
-	global $commands,$buffwords,$nick;
-	foreach ($commands as $command => $function) {
-		$ocomm[] = $command;
+	global $commands,$channel,$nick,$function_map,$arguments;
+	if (!is_array($function_map[$arguments])) {
+		foreach ($function_map as $module => $coms) {
+			$ocomm[] = $module;
+		}
+		sort($ocomm);
+		$ocomm = implode(', ',$ocomm);
+		send_msg($channel,'Modules loaded: ' . $ocomm);
+	} else {
+		foreach ($function_map[$arguments] as $command => $function) {
+			$ocomm[] = $command;
+		}
+		sort($ocomm);
+		$ocomm = implode(', ',$ocomm);
+		send_msg($channel,'Commands in ' . $arguments . ': ' . $ocomm);
 	}
-	sort($ocomm);
-	$ocomm = implode(', ',$ocomm);
-	send_msg($buffwords[2],'' . $ocomm);
 }
 function core_quit() {
 	global $admin,$settings,$socket,$buffwords;

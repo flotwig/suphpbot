@@ -2,13 +2,13 @@
 if (PHP_SAPI !== 'cli') { die('This script can\'t be run from a web browser.'); }
 set_time_limit(0);
 ini_set('error_reporting',E_ALL-E_NOTICE);
+load_settings();
 // thanks, tutorialnut.com, for the control codes!
 define('C_BOLD', chr(2));
 define('C_COLOR', chr(3));
 define('C_ITALIC', chr(29));
 define('C_REVERSE', chr(22));
 define('C_UNDERLINE', chr(31)); 
-$settings = parse_ini_file('ircconfig.ini');
 // add some essential command mappings
 $commands = array(
 	'load'=>'module_load',
@@ -16,13 +16,10 @@ $commands = array(
 	'list'=>'command_list'
 );
 // preload some modules
-$premods = explode(',',$settings['module_preload']);
 foreach ($premods as $premod) {
 	include('./modules/' . trim($premod) . '.php');
 	$commands = array_merge($commands,$function_map[trim($premod)]);
 }
-$admins = explode(',',$settings['admins']);
-$ignore = explode(',',$settings['ignore']);
 $lastsent = array(); // Array of timestamps for last command from nicks - helps prevent flooding
 while (1) {
 	$socket = fsockopen($settings['server'], $settings['port'], $errno, $errstr, 20);
@@ -66,7 +63,7 @@ while (1) {
 				send('NICK ' . $settings['nick'] . '_' . rand(100,999));
 			} elseif ($buffwords[0]=='PING') {
 				send('PONG ' . str_replace(array("\n","\r"),'',end(explode(' ',$buffer,2))));
-			} elseif ($buffwords[1]=='PRIVMSG'&&substr($buffwords[3],1,strlen($settings['commandchar'])==$settings['commandchar']) {
+			} elseif ($buffwords[1]=='PRIVMSG'&&substr($buffwords[3],1,strlen($settings['commandchar']))==$settings['commandchar']) {
 				$admin = FALSE;
 				if (in_array($nick,$admins)) {
 					send('WHOIS ' . $nick);
@@ -159,4 +156,11 @@ function xtrim($str) {
     }
     return $ret_str;
 } 
+function load_settings() {
+	global $settings,$premods,$admins,$ignore;
+	$settings = parse_ini_file('ircconfig.ini');
+	$premods = explode(',',$settings['module_preload']);
+	$admins = explode(',',$settings['admins']);
+	$ignore = explode(',',$settings['ignore']);
+}
 ?> 
