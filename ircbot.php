@@ -33,11 +33,8 @@ while (1) {
 		send('USER ' . $settings['ident'] . ' 8 * :' . $settings['realname']);
 		send('NICK ' . $settings['nick']);
 		while (!feof($socket)) {
+			$admin = FALSE;
 			$buffer = fgets($socket);
-			if (strlen($buffer)>0) {
-				call_hook('data_in');
-				echo '[IN]' . "\t" . $buffer;
-			}
 			$buffer = str_replace(array("\n","\r"),'',$buffer);
 			$buffwords = explode(' ',$buffer);
 			$nick = explode('!',$buffwords[0]);
@@ -47,6 +44,11 @@ while (1) {
 			$bw = $buffwords;
 			$bw[0]=NULL; $bw[1]=NULL; $bw[2]=NULL; $bw[3]=NULL;
 			$arguments = trim(implode(' ',$bw));
+			$args = explode(' ',$arguments);
+			if (strlen($buffer)>0) {
+				call_hook('data_in');
+				echo '[IN]' . "\t" . $buffer . "\r\n";
+			}
 			if ($buffwords[1]=='002') {
 				// The server just sent us something. We're in.
 				if ($settings['nickserv_pass']!=='') {
@@ -63,25 +65,6 @@ while (1) {
 			} elseif ($buffwords[0]=='PING') {
 				send('PONG ' . str_replace(array("\n","\r"),'',end(explode(' ',$buffer,2))));
 			} elseif ($buffwords[1]=='PRIVMSG'&&substr($buffwords[3],1,strlen($settings['commandchar']))==$settings['commandchar']) {
-				$admin = FALSE;
-				if (in_array($nick,$admins)) {
-					send('WHOIS ' . $nick);
-					while(1) {
-						$buffer = fgets($socket);
-						$bufferq = $buffer;
-						$buffer = explode(' ',$buffer);
-						if (strlen($bufferq)>0) {
-							echo '[IN]' . "\t" . $bufferq;
-						}
-						if ($buffer[1]=='307') {
-							$admin = TRUE;
-							break;
-						} elseif ($buffer[1]=='318'||$buffer[1]=='431') {
-							$admin = FALSE;
-							break;
-						}
-					}
-				}
 				$command = trim(substr($buffwords[3],2));
 				if ($lastsent[$hostname]<(time()-$settings['floodtimer'])) {
 					$lastsent[$hostname]=time();
