@@ -30,7 +30,7 @@ while (1) {
 		if ($settings['pass']!=='') {
 			send('PASS ' . $settings['pass']);
 		}
-		send('USER ' . $settings['nick'] . ' 8 * :' . $settings['realname']);
+		send('USER ' . $settings['ident'] . ' 8 * :' . $settings['realname']);
 		send('NICK ' . $settings['nick']);
 		while (!feof($socket)) {
 			$buffer = fgets($socket);

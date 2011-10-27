@@ -9,8 +9,24 @@ $function_map['core'] = array(
 	'echo'=>'core_echo',
 	'whoami'=>'core_whoami',
 	'ping'=>'core_ping',
-	'reload'=>'core_reload'
+	'reload'=>'core_reload',
+	'about'=>'core_about'
 );
+function core_about() {
+	global $channel,$arguments,$settings;
+	$abouts = array(
+		'author'=>'suphpbot is coded by flotwig. http://za.chary.us/',
+		'url'=>'You can download suphpbot at https://github.com/flotwig/suphpbot',
+		'about'=>'suphpbot is a modular IRC bot written entirely in PHP.'
+	);
+	$abts=array();
+	foreach ($abouts as $cmd => $abt) { $abts[] = $cmd; }
+	if (isset($abouts[$arguments])) {
+		send_msg($channel,$abouts[$arguments]);
+	} else {
+		send_msg($channel,'What would you like to know more about? ' . $settings['commandchar'] . implode(', ' . $settings['commandchar'],$abts));
+	}
+}
 function core_reload() {
 	global $admin,$channel;
 	if ($admin) {
