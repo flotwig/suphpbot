@@ -61,9 +61,12 @@ while (1) {
 				foreach ($channels as $channel) {
 					send('JOIN ' . trim($channel));
 				}
+			} elseif ($buffwords[1]=='433') {
+				// Nick collision!
+				send('NICK ' . $settings['nick'] . '_' . rand(100,999));
 			} elseif ($buffwords[0]=='PING') {
 				send('PONG ' . str_replace(array("\n","\r"),'',end(explode(' ',$buffer,2))));
-			} elseif ($buffwords[1]=='PRIVMSG'&&substr($buffwords[3],1,1)==$settings['commandchar']) {
+			} elseif ($buffwords[1]=='PRIVMSG'&&substr($buffwords[3],1,strlen($settings['commandchar'])==$settings['commandchar']) {
 				$admin = FALSE;
 				if (in_array($nick,$admins)) {
 					send('WHOIS ' . $nick);
