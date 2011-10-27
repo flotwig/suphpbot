@@ -37,11 +37,16 @@ function core_echo() {
 	}
 }
 function core_module_unload() {
-	global $admin,$buffwords,$commands,$nick,$function_map,$channel;
+	global $admin,$buffwords,$commands,$nick,$function_map,$channel,$hook_map,$hooks;
 	if ($admin) {
 		$module = end(explode('/',$buffwords[4]));
 		if (is_array($function_map[$module])) {
 			$commands = array_diff($commands,$function_map[$module]);
+			if (is_array($hook_map[$module])) {
+				foreach ($hook_map[$module] as $hook_name => $hook_function) {
+					$hooks[$hook_name] = array_diff($hooks[$hook_name],array($hook_function));
+				}
+			}
 			send_msg($channel,'Module unloaded successfully!');
 			return true;
 		} else {
@@ -54,12 +59,17 @@ function core_module_unload() {
 	}
 }
 function core_module_load() {
-	global $admin,$buffwords,$commands,$nick,$function_map,$channel;
+	global $admin,$buffwords,$commands,$nick,$function_map,$channel,$hook_map,$hooks;
 	if ($admin) {
 		$module = end(explode('/',$buffwords[4]));
 		if (file_exists('./modules/' . $module . '.php')) {
-			include('./modules/' . $module . '.php');
+			include_once('./modules/' . $module . '.php');
 			$commands = array_merge($commands,$function_map[$module]);
+			if (isset($hook_map[$module])) {
+				foreach ($hook_map[$module] as $hook_id => $hook_function) {
+					$hooks[$hook_id][] = $hook_function;
+				}
+			}
 			send_msg($channel,'Plugin loaded.');
 			return true;
 		} else {

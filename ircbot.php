@@ -9,13 +9,11 @@ define('C_COLOR', chr(3));
 define('C_ITALIC', chr(29));
 define('C_REVERSE', chr(22));
 define('C_UNDERLINE', chr(31)); 
-// add some essential command mappings
-$commands = array(
-	'load'=>'module_load',
-	'unload'=>'module_unload',
-	'list'=>'command_list'
-);
+// hooks in the house! woo woo
+$hooks = array('data_in'=>array(),
+	'data_out'=>array());
 // preload some modules
+$commands = array();
 foreach ($premods as $premod) {
 	include('./modules/' . trim($premod) . '.php');
 	$commands = array_merge($commands,$function_map[trim($premod)]);
@@ -37,6 +35,7 @@ while (1) {
 		while (!feof($socket)) {
 			$buffer = fgets($socket);
 			if (strlen($buffer)>0) {
+				call_hook('data_in');
 				echo '[IN]' . "\t" . $buffer;
 			}
 			$buffer = str_replace(array("\n","\r"),'',$buffer);
@@ -103,6 +102,7 @@ while (1) {
 // much thanks to gtoxic of avestribot for helping me realize my stupid mistake here
 function send($raw) {
 	global $socket;
+	call_hook('data_out');
 	fwrite($socket,"{$raw}\n\r");
 	echo '[OUT]' . "\t" . $raw . "\n";
 }
@@ -110,16 +110,12 @@ function send_msg($target,$message) {
 	global $nick,$settings;
 	// Let's chunk up the message so it all gets sent.
 	$message = str_split($message,intval($settings['maxlen']));
-	var_dump($message);
 	if (count($message)>intval($settings['maxsend'])) {
 		// We want to use maxsend-1 in this situation because we'll be appending an error telling the user what
 		// exactly happened to the rest of their output.
 		$message = array_slice($message,0,intval($settings['maxsend']-1));
-		var_dump($message);
 		$message[] = 'The output for your command was too long to send fully.';
-		var_dump($message);
 	}
-	var_dump($message);
 	foreach ($message as $msg) {
 		send ('PRIVMSG ' . $target . ' :' . C_BOLD . $nick .  ': ' . C_BOLD . xtrim($msg));
 	}
@@ -162,5 +158,15 @@ function load_settings() {
 	$premods = explode(',',$settings['module_preload']);
 	$admins = explode(',',$settings['admins']);
 	$ignore = explode(',',$settings['ignore']);
+}
+function call_hook($hook) {
+	global $hooks;
+	$hook = $hooks[$hook];
+	foreach ($hook as $hookah) {
+		call_user_func($hookah);
+	}
+}
+function shell_send($message) {
+	echo "[PHP]\t" . $message . "\n";
 }
 ?> 
