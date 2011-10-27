@@ -25,20 +25,24 @@ function users_functions_save() {
 }
 function users_identify() {
     global $args,$channel,$user_array,$user_sessions,$hostname;
-    foreach ($user_array as $user_line) {
-        if ($user_line[0]==$args[0]) {
-			if ($user_line[1]==hash('sha256',$args[1])) {
-				$user_sessions[$hostname] = $user_line;
-				send_msg($channel,'You are now identified.');
-				$happening = TRUE;
-			} else {
-				send_msg($channel,'Incorrect password.');
-				$happening = TRUE;
+	if (is_array($user_sessions[$hostname])) {
+		send_msg($channel,'You\'re already logged in.');
+	} else {
+		foreach ($user_array as $user_line) {
+			if ($user_line[0]==$args[0]) {
+				if ($user_line[1]==hash('sha256',$args[1])) {
+					$user_sessions[$hostname] = $user_line;
+					send_msg($channel,'You are now identified.');
+					$happening = TRUE;
+				} else {
+					send_msg($channel,'Incorrect password.');
+					$happening = TRUE;
+				}
 			}
 		}
-    }
-	if (!$happening) {
-		send_msg($channel,'The specified user does not exist.');
+		if (!$happening) {
+			send_msg($channel,'The specified user does not exist.');
+		}
 	}
 } 
 function users_register() {

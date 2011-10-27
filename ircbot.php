@@ -1,6 +1,12 @@
 <?php
 if (PHP_SAPI !== 'cli') { die('This script can\'t be run from a web browser.'); }
 set_time_limit(0);
+$config = 'ircconfig.ini';
+if (count(getopt('c:'))>0) {
+	$config = getopt('c:');
+	var_dump($config);
+	$config = $config['c'];
+}
 ini_set('error_reporting',E_ALL-E_NOTICE);
 load_settings();
 // thanks, tutorialnut.com, for the control codes!
@@ -150,8 +156,8 @@ function xtrim($str) {
     return $ret_str;
 } 
 function load_settings() {
-	global $settings,$premods,$admins,$ignore;
-	$settings = parse_ini_file('ircconfig.ini');
+	global $settings,$premods,$admins,$ignore,$config;
+	$settings = parse_ini_file($config);
 	$premods = explode(',',$settings['module_preload']);
 	$admins = explode(',',$settings['admins']);
 	$ignore = explode(',',$settings['ignore']);
