@@ -5,6 +5,7 @@
 $function_map['example'] = array(
 	'test'=>'test_function'
 );
+// Ah, what the hell, let's add some hooks too!
 $hook_map['example'] = array(
 	'data_in'=>'test_hook_data_in'
 );

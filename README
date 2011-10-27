@@ -48,3 +48,5 @@ Here is a list of the central core commands:
 	* list - Sends a list of the currently available commands.
 	* whoami - Tells you who you are.
 	* quit - Quits the IRC network and kills the bot.
+	* join [channel] - Tells the bot to join a channel.
+	* part [channel] - Tells the bot to part from a channel.
