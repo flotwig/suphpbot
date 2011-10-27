@@ -12,7 +12,13 @@ $function_map['core'] = array(
 	'reload'=>'core_reload'
 );
 function core_reload() {
-	load_settings();
+	global $admin,$channel;
+	if ($admin) {
+		load_settings();
+		send_msg($channel,'Settings reloaded.');
+	} else {
+		send_msg($channel,'You are merely a normal user. You shall not reload settings!');
+	}
 }
 function core_ping() {
 	global $channel;
@@ -27,41 +33,41 @@ function core_echo() {
 	if ($admin) {
 		send_msg($channel,'' . $arguments);
 	} else {
-		send_msg($buffwords[2],'You don\'t have the permissions required to execute this command.');
+		send_msg($channel,'You don\'t have the permissions required to execute this command.');
 	}
 }
 function core_module_unload() {
-	global $admin,$buffwords,$commands,$nick,$function_map;
+	global $admin,$buffwords,$commands,$nick,$function_map,$channel;
 	if ($admin) {
 		$module = end(explode('/',$buffwords[4]));
 		if (is_array($function_map[$module])) {
 			$commands = array_diff($commands,$function_map[$module]);
-			send_msg($buffwords[2],'Module unloaded successfully!');
+			send_msg($channel,'Module unloaded successfully!');
 			return true;
 		} else {
-			send_msg($buffwords[2],'Module not loaded.');
+			send_msg($channel,'Module not loaded.');
 			return false;
 		}
 	} else {
-		send_msg($buffwords[2],'You need to be identified as an administrator to unload plugins.');
+		send_msg($channel,'You need to be identified as an administrator to unload plugins.');
 		return false;
 	}
 }
 function core_module_load() {
-	global $admin,$buffwords,$commands,$nick,$function_map;
+	global $admin,$buffwords,$commands,$nick,$function_map,$channel;
 	if ($admin) {
 		$module = end(explode('/',$buffwords[4]));
 		if (file_exists('./modules/' . $module . '.php')) {
 			include('./modules/' . $module . '.php');
 			$commands = array_merge($commands,$function_map[$module]);
-			send_msg($buffwords[2],'Plugin loaded.');
+			send_msg($channel,'Plugin loaded.');
 			return true;
 		} else {
-			send_msg($buffwords[2],'Plugin not loaded. Does it exist?');
+			send_msg($channel,'Plugin not loaded. Does it exist?');
 			return false;
 		}
 	} else {
-		send_msg($buffwords[2],'You need to be identified as an administrator to load plugins.');
+		send_msg($channel,'You need to be identified as an administrator to load plugins.');
 		return false;
 	}
 }
