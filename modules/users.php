@@ -7,7 +7,7 @@ $hook_map['users'] = array(
 	'data_in'=>'users_hook_data_in'
 );
 $user_sessions = array();
-// csv format: username, password in sha256, admin (1 or 0)
+// csv format: username, password in sha256, hostmask, admin (1 or 0)
 $user_handle = fopen('./data/users.csv','r');
 $user_array = array();
 while ($user_line = fgetcsv($user_handle)) {
@@ -24,8 +24,10 @@ function users_functions_save() {
 	return $return;
 }
 function users_identify() {
-    global $args,$channel,$user_array,$user_sessions,$hostname;
-	if (is_array($user_sessions[$hostname])) {
+    global $args,$channel,$user_array,$user_sessions,$hostname,$in_convo;
+	if (!$in_convo) {
+		send_msg($channel,'This command must be sent via /msg.');
+	} elseif (is_array($user_sessions[$hostname])) {
 		send_msg($channel,'You\'re already logged in.');
 	} else {
 		foreach ($user_array as $user_line) {
@@ -47,12 +49,14 @@ function users_identify() {
 } 
 function users_register() {
 	global $args,$channel,$user_array,$user_sessions,$hostname;
-	if (is_array($user_sessions[$hostname])) {
+	if (!$in_convo) {
+		send_msg($channel,'This command must be sent via /msg.');
+	} elseif (is_array($user_sessions[$hostname])) {
 		send_msg($channel,'You\'re already logged in.');
 	} elseif (count($args)!==2) {
 		send_msg($channel,'Command usage: register USERNAME PASSWORD');
 	} else {
-		$user_array[] = array($args[0],hash('sha256',$args[1]),0);
+		$user_array[] = array($args[0],hash('sha256',$args[1]),$hostname,0);
 		if (users_functions_save()) {
 			send_msg($channel,'You were successfully signed up. Now, you can identify.');
 		} else {
@@ -68,7 +72,7 @@ function users_hook_data_in() {
 	}
 	// is our user an admin?
 	if (is_array($user_sessions[$hostname])) {
-		if ($user_sessions[$hostname][2]==1) {
+		if ($user_sessions[$hostname][3]==1) {
 			$admin = TRUE;
 		} else {
 			$admin = FALSE;
