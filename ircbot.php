@@ -45,16 +45,17 @@ while (1) {
 		send('NICK ' . $settings['nick']);
 		while (!feof($socket)) {
 			$admin = FALSE;
-			$in_convo = FALSE;
 			$buffer = fgets($socket);
 			$buffer = str_replace(array("\n","\r"),'',$buffer);
 			$buffwords = explode(' ',$buffer);
 			$nick = explode('!',$buffwords[0]);
 			$nick = substr($nick[0],1);
 			$channel = $buffwords[2];
-			if (substr($channel,0,1)!=='#') {
-				$channel = $nick;
+			if ($channel==$settings['nick']) {
 				$in_convo = TRUE;
+				$channel = $nick;
+			} else {
+				$in_convo = FALSE;
 			}
 			$hostname = end(explode('@',$buffwords[0]));
 			$bw = $buffwords;
@@ -80,7 +81,7 @@ while (1) {
 				send('NICK ' . $settings['nick'] . '_' . rand(100,999));
 			} elseif ($buffwords[0]=='PING') {
 				send('PONG ' . str_replace(array("\n","\r"),'',end(explode(' ',$buffer,2))));
-			} elseif ($buffwords[1]=='PRIVMSG'&&(substr($buffwords[3],1,strlen($settings['commandchar']))==$settings['commandchar']||$in_convo)) {
+			} elseif ($buffwords[1]=='PRIVMSG'&&((substr($buffwords[3],1,strlen($settings['commandchar']))==$settings['commandchar'])||$in_convo)) {
 				if ($in_convo) {
 					$command = trim(substr($buffwords[3],1));
 				} else {
@@ -94,7 +95,7 @@ while (1) {
 						if (function_exists($commands[$command])) {
 							call_user_func($commands[$command]);
 						} else {
-							send_msg($buffwords[2],'' . $command . ' is not a valid command. Maybe you need to load a plugin?');
+							send_msg($channel,'' . $command . ' is not a valid command. Maybe you need to load a plugin?');
 						}
 					}
 				}

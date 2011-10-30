@@ -48,7 +48,7 @@ function users_identify() {
 	}
 } 
 function users_register() {
-	global $args,$channel,$user_array,$user_sessions,$hostname;
+	global $args,$channel,$user_array,$user_sessions,$hostname,$in_convo;
 	if (!$in_convo) {
 		send_msg($channel,'This command must be sent via /msg.');
 	} elseif (is_array($user_sessions[$hostname])) {
