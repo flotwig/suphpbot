@@ -10,7 +10,9 @@ $function_map['core'] = array(
 	'whoami'=>'core_whoami',
 	'ping'=>'core_ping',
 	'reload'=>'core_reload',
-	'about'=>'core_about'
+	'about'=>'core_about',
+	'raw'=>'core_raw',
+	'config'=>'core_config'
 );
 function core_about() {
 	global $channel,$arguments,$settings;
@@ -122,6 +124,33 @@ function core_quit() {
 		fclose($socket);
 		die();
 	} else {
-		send_msg($buffwords[2],'If you really want to quit so bad, maybe you should identify as an admin first!');
+		send_msg($channel,'If you really want to quit so bad, maybe you should identify as an admin first!');
+	}
+}
+function core_raw() {
+	global $admin,$channel,$arguments;
+	if ($admin) {
+		send($arguments);
+	} else {
+		send_msg($channel,'Nice try.');
+	}
+}
+function core_config() {
+	global $admin,$channel,$buffwords,$arguments,$settings,$config;
+	if ($buffwords[4]=='view') {
+		if (isset($settings[$buffwords[5]])) {
+			send_msg($channel,$buffwords[5] . ' is: ' . $settings[$buffwords[5]]);
+		} else {
+			send_msg($channel,'That configuration key does not exist.');
+		}
+	} else {
+		if (!$admin) {
+			send_msg($channel,'Sorry, but you need to be an admin to use that command.');
+		} else {
+			$key = $buffwords[4];
+			$value = implode(' ',array_slice($buffwords,5));
+			$settings[$key] = $value;
+			save_settings($settings,$config);
+		}
 	}
 }

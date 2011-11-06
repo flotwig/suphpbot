@@ -125,7 +125,7 @@ function send_msg($target,$message) {
 	}
 }
 // borrowed from gtoxic of avestribot, who borrowed it from somebody else...
-function write_php_ini($array, $file) {
+function save_settings($array, $file) {
 	$res = array();
 	foreach($array as $key => $val) {
 		if(is_array($val)) {
