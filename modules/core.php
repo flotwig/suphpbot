@@ -26,7 +26,7 @@ function core_about() {
 	if (isset($abouts[$arguments])) {
 		send_msg($channel,$abouts[$arguments]);
 	} else {
-		send_msg($channel,'What would you like to know more about? ' . $settings['commandchar'] . 'about ' . implode(', ' . $settings['commandchar'] . 'about ' . ,$abts));
+		send_msg($channel,'What would you like to know more about? ' . $settings['commandchar'] . 'about ' . implode(', ' . $settings['commandchar'] . 'about ' . $abts));
 	}
 }
 function core_reload() {
