@@ -159,8 +159,8 @@ function save_settings($array, $file) {
 		}
 	}
 	$res = implode("\r\n", $res);
-	$res = '; IRC bot config file
-	; For more info, check the README' . "\r\n" . $res;
+	$res = '; IRC bot config file' . "\r\n" . '; For more info, check the README' . "\r\n" . $res;
+	file_put_contents($file,$res);
 }
 // supertrim function by jose cruz
 // josecruz at josecruz dot com dot br

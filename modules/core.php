@@ -150,7 +150,7 @@ function core_config() {
 			$key = $buffwords[4];
 			$value = implode(' ',array_slice($buffwords,5));
 			$settings[$key] = $value;
-			save_settings($settings,$config);
+			save_settings(array('phpbot'=>$settings),$config);
 		}
 	}
 }
