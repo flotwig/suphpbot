@@ -9,6 +9,7 @@ if (count(getopt('c:'))>0) {
 }
 ini_set('error_reporting',E_ALL-E_NOTICE);
 load_settings();
+define('C_CTCP', chr(1));
 // thanks, tutorialnut.com, for the control codes!
 define('C_BOLD', chr(2));
 define('C_COLOR', chr(3));
@@ -29,6 +30,7 @@ foreach ($premods as $premod) {
 		}
 	}
 }
+
 $lastsent = array(); // Array of timestamps for last command from nicks - helps prevent flooding
 while (1) {
 	$socket = fsockopen($settings['server'], $settings['port'], $errno, $errstr, 20);
@@ -81,6 +83,27 @@ while (1) {
 				send('NICK ' . $settings['nick'] . '_' . rand(100,999));
 			} elseif ($buffwords[0]=='PING') {
 				send('PONG ' . str_replace(array("\n","\r"),'',end(explode(' ',$buffer,2))));
+			} elseif (($buffwords[1]=='PRIVMSG'||$buffwords[1]=='NOTICE')&&$in_convo&&ord(trim(substr($buffwords[3],1)))==1) {
+				// We're in a CTCP. Act like it.
+				// acc to http://www.irchelp.org/irchelp/rfc/ctcpspec.html
+				$command = trim(substr($buffwords[3],2)); // Let's crop out the first two characters of what they sent, because it's just a colon and a C_CTCP.
+				$command = strtoupper(rtrim($command,C_CTCP)); // Now we have to take off the trailing C_CTCP
+				$arguments = rtrim($arguments,C_CTCP); // Yes, the arguments too.
+				if ($command=='VERSION'||$command=='FINGER'||$command=='USERINFO') {
+					// because notices kick ass
+					send_ctcp($channel,$command . ' phpbot version 0.1b - /msg ' . $settings['nick'] . ' about for more information');
+				} elseif ($command=='PING') {
+					send_ctcp($channel,$command . ' ' . time());
+				} elseif ($command=='TIME') {
+					send_ctcp($channel,$command . ' ' . date('D M d H:i:s Y T'));
+				} elseif ($command=='ERRMSG') {
+					// I don't really understand this one, so Imma just echo, 'kay
+					send_ctcp($channel,$command . ' ' . $arguments);
+				} elseif ($command=='SOURCE') {
+					send_ctcp($channel,$command . ' For a copy of me, visit https://github.com/flotwig/suphpbot');
+				} elseif ($command=='CLIENTINFO') {
+					send_ctcp($channel,'I know these CTCP commands: PING TIME ERRMSG SOURCE CLIENTINFO VERSION FINGER USERINFO');
+				}
 			} elseif ($buffwords[1]=='PRIVMSG'&&((substr($buffwords[3],1,strlen($settings['commandchar']))==$settings['commandchar'])||$in_convo)) {
 				if ($in_convo) {
 					$command = trim(substr($buffwords[3],1));
@@ -172,5 +195,8 @@ function call_hook($hook) {
 }
 function shell_send($message) {
 	echo "[PHP]\t" . $message . "\n";
+}
+function send_ctcp($target,$command) {
+	send('NOTICE ' . $target . ' :' . C_CTCP . $command . C_CTCP);
 }
 ?> 
