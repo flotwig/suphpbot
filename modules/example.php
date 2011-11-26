@@ -1,26 +1,64 @@
 <?php
-// Define the command => function mappings here. The name of the array
-// must be the same as the name of the .php file. So, the mapping array for
-// example.php would be $function_map['example'].
-$function_map['example'] = array(
-	'test'=>'test_function'
+//** Author: HiddenKnowledge (kevin@glazenburg.com) **//
+// (c) 2011/2012
+
+$scriptname = str_replace(".php","",basename(__FILE__));
+$function_map[$scriptname] = array(
+    'premium' => 'get_premium_info'
+    'profile' => 'get_profile'
 );
-// Ah, what the hell, let's add some hooks too!
-$hook_map['example'] = array(
-	'data_in'=>'test_hook_data_in'
-);
-// Define those functions, yo.
-function test_hook_data_in() {
-	shell_send('example hook');
+
+function bold($input) {
+    return (CHAR_B . $input . CHAR_B);
 }
-function test_function() {
-	// Let's globalize some of the variables we'll need for this command
-	global $buffwords,$admin,$nick;
-	if ($admin) {
-		// He's an admin! Let's PRIVMSG the channel and tell them so.
-		send_msg($buffwords[2],$nick . ' is an admin.');
-	} else {
-		// Not an admin...
-		send_msg($buffwords[2],$nick . ' is not an admin. Too bad.');
-	}
+
+function get_premium_info()
+{
+    // Let's globalize some of the variables we'll need for this command
+    global $channel, $args;
+    
+    $jsonurl = "http://360api.chary.us/?gamertag=" . urlencode($args[0]);
+    try {
+        $json = file_get_contents($jsonurl, 0, null, null);
+    }
+    catch (Exception $e) {
+        send_msg($channel, 'Error: ' . $e->getMessage());
+    }
+    $json_output = json_decode($json, TRUE);
+    
+    if ($json_output) {
+        if ($json_output['GamertagExists']) {
+            $premium = $json_output['Subscription'];
+            send_msg($channel, "This user is a " tolower(bold($premium)) . " user.");
+        } else {
+            send_msg($channel, "No such user exists.");
+        }
+    } else {send_msg($channel, "Something went wrong. :(");}
+
 }
+
+function get_profile()
+{
+    // Let's globalize some of the variables we'll need for this command
+    global $channel, $args;
+    
+    $jsonurl = "http://360api.chary.us/?gamertag=" . urlencode($args[0]);
+    try {
+        $json = file_get_contents($jsonurl, 0, null, null);
+    }
+    catch (Exception $e) {
+        send_msg($channel, 'Error: ' . $e->getMessage());
+    }
+    $json_output = json_decode($json, TRUE);
+    
+    if ($json_output) {
+        if ($json_output['GamertagExists']) {
+            if($json_output['Gender'] == "Male") {$gender = "man";} else {$gender = "woman";}
+            send_msg($channel, bold($jsonoutput['Gamertag']) . " is a " . bold($gender) . " that has a gamerscore of " . bold($jsonoutput['Gamerscore']) . " and earned " . bold($jsonoutput['EarnedAchievements']) . " archievements.");
+        } else {
+            send_msg($channel, "No such user exists.");
+        }
+    } else {send_msg($channel, "Something went wrong. :(");}
+
+}
+

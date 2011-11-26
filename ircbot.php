@@ -9,6 +9,8 @@ if (count(getopt('c:'))>0) {
 }
 ini_set('error_reporting',E_ALL-E_NOTICE);
 load_settings();
+define('START_TIME',time()); // so we can have core::uptime
+define('IRC_VERSION','phpbot version 0.1b - /msg me about for more information');
 define('C_CTCP', chr(1));
 // thanks, tutorialnut.com, for the control codes!
 define('C_BOLD', chr(2));
@@ -18,17 +20,13 @@ define('C_REVERSE', chr(22));
 define('C_UNDERLINE', chr(31)); 
 // hooks in the house! woo woo
 $hooks = array('data_in'=>array(),
-	'data_out'=>array());
+	'data_out'=>array()
+	'ctcp_in'=>array()
+	'ctcp_out'=>array());
 // preload some modules
 $commands = array();
 foreach ($premods as $premod) {
-	include_once('./modules/' . trim($premod) . '.php');
-	$commands = array_merge($commands,$function_map[trim($premod)]);
-	if (isset($hook_map[trim($premod)])) {
-		foreach ($hook_map[trim($premod)] as $hook_id => $hook_function) {
-			$hooks[$hook_id][] = $hook_function;
-		}
-	}
+	load_module($premod);
 }
 
 $lastsent = array(); // Array of timestamps for last command from nicks - helps prevent flooding
@@ -87,11 +85,11 @@ while (1) {
 				// We're in a CTCP. Act like it.
 				// acc to http://www.irchelp.org/irchelp/rfc/ctcpspec.html
 				$command = trim(substr($buffwords[3],2)); // Let's crop out the first two characters of what they sent, because it's just a colon and a C_CTCP.
-				$command = strtoupper(rtrim($command,C_CTCP)); // Now we have to take off the trailing C_CTCP
+				$command = strtoupper(rtrim($command,C_CTCP)); // Now we have to take off any trailing C_CTCPs
 				$arguments = rtrim($arguments,C_CTCP); // Yes, the arguments too.
+				call_hook('ctcp_in'); // we just got a ctcp, anybody want to hook up?
 				if ($command=='VERSION'||$command=='FINGER'||$command=='USERINFO') {
-					// because notices kick ass
-					send_ctcp($channel,$command . ' phpbot version 0.1b - /msg ' . $settings['nick'] . ' about for more information');
+					send_ctcp($channel,$command . ' ' . IRC_VERSION);
 				} elseif ($command=='PING') {
 					send_ctcp($channel,$command . ' ' . time());
 				} elseif ($command=='TIME') {
@@ -102,7 +100,7 @@ while (1) {
 				} elseif ($command=='SOURCE') {
 					send_ctcp($channel,$command . ' For a copy of me, visit https://github.com/flotwig/suphpbot');
 				} elseif ($command=='CLIENTINFO') {
-					send_ctcp($channel,'I know these CTCP commands: PING TIME ERRMSG SOURCE CLIENTINFO VERSION FINGER USERINFO');
+					send_ctcp($channel,$command . ' I know these CTCP commands: PING TIME ERRMSG SOURCE CLIENTINFO VERSION FINGER USERINFO');
 				}
 			} elseif ($buffwords[1]=='PRIVMSG'&&((substr($buffwords[3],1,strlen($settings['commandchar']))==$settings['commandchar'])||$in_convo)) {
 				if ($in_convo) {
@@ -197,6 +195,17 @@ function shell_send($message) {
 	echo "[PHP]\t" . $message . "\n";
 }
 function send_ctcp($target,$command) {
+	call_hook('ctcp_out');
 	send('NOTICE ' . $target . ' :' . C_CTCP . $command . C_CTCP);
+}
+function load_module($modname) {
+	global $commands, $function_map, $hook_map, $hooks;
+	include_once('./modules/' . trim($modname) . '.php');
+	$commands = array_merge($commands,$function_map[trim($modname)]);
+	if (isset($hook_map[trim($modname)])) {
+		foreach ($hook_map[trim($modname)] as $hook_id => $hook_function) {
+			$hooks[$hook_id][] = $hook_function;
+		}
+	}
 }
 ?> 

@@ -12,14 +12,27 @@ $function_map['core'] = array(
 	'reload'=>'core_reload',
 	'about'=>'core_about',
 	'raw'=>'core_raw',
-	'config'=>'core_config'
+	'config'=>'core_config',
+	'uptime'=>'core_uptime'
 );
+function core_uptime() {
+	global $channel;
+	$uptime = time()-START_TIME;
+	$response = 'Bot uptime is: ' . floor($uptime/60/60/24) . ' days, ' . ($uptime/60/60%24) . ' hours, ' . ($uptime/60%60) . ' minutes, and ' . ($uptime%60) . ' seconds. ';
+	$uptime = @file_get_contents('/proc/uptime');
+	if ($uptime) {
+		$uptime = preg_replace('/\D/', '', $uptime[0]);
+		$response .= 'Server uptime is: ' . floor($uptime/60/60/24) . ' days, ' . ($uptime/60/60%24) . ' hours, ' . ($uptime/60%60) . ' minutes, and ' . ($uptime%60) . ' seconds. ';
+	}
+	send_msg($channel,$response);
+}
 function core_about() {
 	global $channel,$arguments,$settings;
 	$abouts = array(
 		'author'=>'suphpbot is coded by flotwig. http://za.chary.us/',
 		'url'=>'You can download suphpbot at https://github.com/flotwig/suphpbot',
-		'about'=>'suphpbot is a modular IRC bot written entirely in PHP.'
+		'about'=>'suphpbot is a modular IRC bot written entirely in PHP.',
+		'version'=>IRC_VERSION
 	);
 	$abts=array();
 	foreach ($abouts as $cmd => $abt) { $abts[] = $cmd; }
@@ -81,13 +94,7 @@ function core_module_load() {
 	if ($admin) {
 		$module = end(explode('/',$buffwords[4]));
 		if (file_exists('./modules/' . $module . '.php')) {
-			include_once('./modules/' . $module . '.php');
-			$commands = array_merge($commands,$function_map[$module]);
-			if (isset($hook_map[$module])) {
-				foreach ($hook_map[$module] as $hook_id => $hook_function) {
-					$hooks[$hook_id][] = $hook_function;
-				}
-			}
+			load_module($module);
 			send_msg($channel,'Plugin loaded.');
 			return true;
 		} else {
