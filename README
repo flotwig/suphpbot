@@ -2,6 +2,10 @@ suphpbot - A modular, non-OOP IRC bot written entirely in PHP
 Version 0.1b - http://za.chary.us/ - zbloomq@live.com
 =================================================
 This is an IRC bot.
+1. INSTALLATION
+2. RUNNING THE BOT
+3. GENERAL BOT ADMINISTRATION
+4. CONFIGURATION OPTIONS
 =================================================
 1. INSTALLATION
 =================================================
@@ -55,3 +59,33 @@ Here is a list of the central core commands:
 	* quit - Quits the IRC network and kills the bot.
 	* join [channel] - Tells the bot to join a channel.
 	* part [channel] - Tells the bot to part from a channel.
+	* help [command] - Gives you help for the command. :)
+=================================================
+4. CONFIGURATION OPTIONS
+=================================================
+The bot comes prepackaged with tons of configuration options, changeable 
+with the "config" command (see help config for more info). Here are
+the meanings of each option in ircconfig.ini:
+	* server - The hostname or IP of the IRC server to connect to.
+	* port - The port of the IRC server, usually 6667.
+	* channels - A comma-separated list of channels to join on startup.
+	* ignore - A comma-separated list of hostmasks to ignore.
+	* nick - The nick of the bot. If the nick is not available, it will add a random
+		number to the end of this value.
+	* ident - The ident of the bot, used if you do not have an identd running.
+	* realname - The realname of the bot.
+	* quitmsg - The message the bot will send before quitting if it is shut
+		down properly.
+	* pass - The IRC server password. If there is none, leave it blank.
+	* commandchar - The command character that all commands begin with.
+	* nickserv_nick - The nick of the server's nick service.
+	* nickserv_pass - The password for your bot's nick. If there is none, leave
+		it blank.
+	* module_preload - A comma-separated list of modules to load on startup.
+	* maxlen - The maximum length of any output sent to the server.
+	* maxsend - The maximum amount of messages the bot can send at once.
+	* floodtimer - The time between commands a user must wait in seconds.
+	* configprivate - Comma-separated list of config options that a normal user
+		cannot view.
+	* blockedcommands - Comma-separated list of commands that nobody is
+		allowed to run for one reason or another.

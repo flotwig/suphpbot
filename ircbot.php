@@ -20,15 +20,15 @@ define('C_REVERSE', chr(22));
 define('C_UNDERLINE', chr(31)); 
 // hooks in the house! woo woo
 $hooks = array('data_in'=>array(),
-	'data_out'=>array()
-	'ctcp_in'=>array()
+	'data_out'=>array(),
+	'ctcp_in'=>array(),
 	'ctcp_out'=>array());
 // preload some modules
 $commands = array();
+$help = array();
 foreach ($premods as $premod) {
 	load_module($premod);
 }
-
 $lastsent = array(); // Array of timestamps for last command from nicks - helps prevent flooding
 while (1) {
 	$socket = fsockopen($settings['server'], $settings['port'], $errno, $errstr, 20);
@@ -44,79 +44,84 @@ while (1) {
 		send('USER ' . $settings['ident'] . ' 8 * :' . $settings['realname']);
 		send('NICK ' . $settings['nick']);
 		while (!feof($socket)) {
-			$admin = FALSE;
 			$buffer = fgets($socket);
 			$buffer = str_replace(array("\n","\r"),'',$buffer);
-			$buffwords = explode(' ',$buffer);
-			$nick = explode('!',$buffwords[0]);
-			$nick = substr($nick[0],1);
-			$channel = $buffwords[2];
-			if ($channel==$settings['nick']) {
-				$in_convo = TRUE;
-				$channel = $nick;
-			} else {
-				$in_convo = FALSE;
-			}
-			$hostname = end(explode('@',$buffwords[0]));
-			$bw = $buffwords;
-			$bw[0]=NULL; $bw[1]=NULL; $bw[2]=NULL; $bw[3]=NULL;
-			$arguments = trim(implode(' ',$bw));
-			$args = explode(' ',$arguments);
-			if (strlen($buffer)>0) {
+			if (strlen($buffer)>0) {	// we don't want to process anything if there's no new data. derp	
+				$admin = FALSE;
+				$buffwords = explode(' ',$buffer);
+				$nick = explode('!',$buffwords[0]);
+				$nick = substr($nick[0],1);
+				$channel = $buffwords[2];
+				if ($channel==$settings['nick']) {
+					$in_convo = TRUE;
+					$channel = $nick;
+				} else {
+					$in_convo = FALSE;
+				}
+				$hostname = end(explode('@',$buffwords[0]));
+				$bw = $buffwords;
+				$bw[0]=NULL; $bw[1]=NULL; $bw[2]=NULL; $bw[3]=NULL;
+				$arguments = trim(implode(' ',$bw));
+				$args = explode(' ',$arguments);
+				$ignore = explode(',',$settings['ignore']);
 				call_hook('data_in');
 				echo '[IN]' . "\t" . $buffer . "\r\n";
-			}
-			if ($buffwords[1]=='002') {
-				// The server just sent us something. We're in.
-				if ($settings['nickserv_pass']!=='') {
-					// Let's identify before we join any channels.
-					send_msg($settings['nickserv_nick'],'IDENTIFY ' . $settings['nickserv_pass']);
-				}
-				$channels = explode(',',$settings['channels']);
-				foreach ($channels as $channel) {
-					send('JOIN ' . trim($channel));
-				}
-			} elseif ($buffwords[1]=='433') {
-				// Nick collision!
-				send('NICK ' . $settings['nick'] . '_' . rand(100,999));
-			} elseif ($buffwords[0]=='PING') {
-				send('PONG ' . str_replace(array("\n","\r"),'',end(explode(' ',$buffer,2))));
-			} elseif (($buffwords[1]=='PRIVMSG'||$buffwords[1]=='NOTICE')&&$in_convo&&ord(trim(substr($buffwords[3],1)))==1) {
-				// We're in a CTCP. Act like it.
-				// acc to http://www.irchelp.org/irchelp/rfc/ctcpspec.html
-				$command = trim(substr($buffwords[3],2)); // Let's crop out the first two characters of what they sent, because it's just a colon and a C_CTCP.
-				$command = strtoupper(rtrim($command,C_CTCP)); // Now we have to take off any trailing C_CTCPs
-				$arguments = rtrim($arguments,C_CTCP); // Yes, the arguments too.
-				call_hook('ctcp_in'); // we just got a ctcp, anybody want to hook up?
-				if ($command=='VERSION'||$command=='FINGER'||$command=='USERINFO') {
-					send_ctcp($channel,$command . ' ' . IRC_VERSION);
-				} elseif ($command=='PING') {
-					send_ctcp($channel,$command . ' ' . time());
-				} elseif ($command=='TIME') {
-					send_ctcp($channel,$command . ' ' . date('D M d H:i:s Y T'));
-				} elseif ($command=='ERRMSG') {
-					// I don't really understand this one, so Imma just echo, 'kay
-					send_ctcp($channel,$command . ' ' . $arguments);
-				} elseif ($command=='SOURCE') {
-					send_ctcp($channel,$command . ' For a copy of me, visit https://github.com/flotwig/suphpbot');
-				} elseif ($command=='CLIENTINFO') {
-					send_ctcp($channel,$command . ' I know these CTCP commands: PING TIME ERRMSG SOURCE CLIENTINFO VERSION FINGER USERINFO');
-				}
-			} elseif ($buffwords[1]=='PRIVMSG'&&((substr($buffwords[3],1,strlen($settings['commandchar']))==$settings['commandchar'])||$in_convo)) {
-				if ($in_convo) {
-					$command = trim(substr($buffwords[3],1));
-				} else {
-					$command = trim(substr($buffwords[3],2));
-				}
-				if ($lastsent[$hostname]<(time()-$settings['floodtimer'])) {
-					$lastsent[$hostname]=time();
-					if (in_array($nick,$ignore)) {
-						// do nothing - we're ignoring them :p
+				if ($buffwords[1]=='002') {
+					// The server just sent us something. We're in.
+					if ($settings['nickserv_pass']!=='') {
+						// Let's identify before we join any channels.
+						send_msg($settings['nickserv_nick'],'IDENTIFY ' . $settings['nickserv_pass']);
+					}
+					$channels = explode(',',$settings['channels']);
+					foreach ($channels as $channel) {
+						send('JOIN ' . trim($channel));
+					}
+				} elseif ($buffwords[1]=='433') {
+					// Nick collision!
+					send('NICK ' . $settings['nick'] . '_' . rand(100,999));
+				} elseif ($buffwords[0]=='PING') {
+					send('PONG ' . str_replace(array("\n","\r"),'',end(explode(' ',$buffer,2))));
+				} elseif (($buffwords[1]=='PRIVMSG'||$buffwords[1]=='NOTICE')&&$in_convo&&ord(trim(substr($buffwords[3],1)))==1) {
+					// We're in a CTCP. Act like it.
+					// acc to http://www.irchelp.org/irchelp/rfc/ctcpspec.html
+					$command = trim(substr($buffwords[3],2)); // Let's crop out the first two characters of what they sent, because it's just a colon and a C_CTCP.
+					$command = strtoupper(rtrim($command,C_CTCP)); // Now we have to take off any trailing C_CTCPs
+					$arguments = rtrim($arguments,C_CTCP); // Yes, the arguments too.
+					call_hook('ctcp_in'); // we just got a ctcp, anybody want to hook up?
+					if ($command=='VERSION'||$command=='FINGER'||$command=='USERINFO') {
+						send_ctcp($channel,$command . ' ' . IRC_VERSION);
+					} elseif ($command=='PING') {
+						send_ctcp($channel,$command . ' ' . time());
+					} elseif ($command=='TIME') {
+						send_ctcp($channel,$command . ' ' . date('D M d H:i:s Y T'));
+					} elseif ($command=='ERRMSG') {
+						// I don't really understand this one, so Imma just echo, 'kay
+						send_ctcp($channel,$command . ' ' . $arguments);
+					} elseif ($command=='SOURCE') {
+						send_ctcp($channel,$command . ' For a copy of me, visit https://github.com/flotwig/suphpbot');
+					} elseif ($command=='CLIENTINFO') {
+						send_ctcp($channel,$command . ' I know these CTCP commands: PING TIME ERRMSG SOURCE CLIENTINFO VERSION FINGER USERINFO');
+					}
+				} elseif ($buffwords[1]=='PRIVMSG'&&((substr($buffwords[3],1,strlen($settings['commandchar']))==$settings['commandchar'])||$in_convo)) {
+					if ($in_convo) {
+						$command = trim(substr($buffwords[3],1));
 					} else {
-						if (function_exists($commands[$command])) {
-							call_user_func($commands[$command]);
+						$command = trim(substr($buffwords[3],2));
+					}
+					$command = strtolower($command);
+					$blocked = explode(',',$settings['blockedcommands']);
+					if ($lastsent[$hostname]<(time()-$settings['floodtimer'])) {
+						$lastsent[$hostname]=time();
+						if (in_array($hostname,$ignore)) {
+							// do nothing - we're ignoring them :p
 						} else {
-							send_msg($channel,'' . $command . ' is not a valid command. Maybe you need to load a plugin?');
+							if (in_array($command,$blocked)) {
+								send_msg($channel,$command . ' is a blocked command. Contact a bot administrator for guidance.');
+							} elseif (function_exists($commands[$command])) {
+								call_user_func($commands[$command]);
+							} else {
+								send_msg($channel,$command . ' is not a valid command. Maybe you need to load a plugin?');
+							}
 						}
 					}
 				}
@@ -200,12 +205,16 @@ function send_ctcp($target,$command) {
 }
 function load_module($modname) {
 	global $commands, $function_map, $hook_map, $hooks;
+	global $help, $help_map;
 	include_once('./modules/' . trim($modname) . '.php');
 	$commands = array_merge($commands,$function_map[trim($modname)]);
 	if (isset($hook_map[trim($modname)])) {
 		foreach ($hook_map[trim($modname)] as $hook_id => $hook_function) {
 			$hooks[$hook_id][] = $hook_function;
 		}
+	}
+	if (is_array($help_map[trim($modname)])) {
+		$help = array_merge($help,$help_map[trim($modname)]);
 	}
 }
 ?> 

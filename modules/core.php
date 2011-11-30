@@ -13,14 +13,47 @@ $function_map['core'] = array(
 	'about'=>'core_about',
 	'raw'=>'core_raw',
 	'config'=>'core_config',
-	'uptime'=>'core_uptime'
+	'uptime'=>'core_uptime',
+	'help'=>'core_help',
+	'eval'=>'core_eval'
 );
+$help_map['core'] = array(
+	'load'=>'Loads a module. Type "load modulename" as an admin to load modules.',
+	'unload'=>'Unloads a module, rendering it unusable. Usage: "unload modulename"',
+	'list'=>'If no arguments are specified, it lists available modules. Type "list modulename" to see a list of the commands in a module.',
+	'quit'=>'Makes the bot quit IRC.',
+	'echo'=>'The bot will echo any arguments back to you.',
+	'whoami'=>'Tells you who you are to the bot.',
+	'ping'=>'Returns "pong".',
+	'reload'=>'Reloads settings.',
+	'about'=>'Tells you about the bot. Run the command for more information.',
+	'raw'=>'Send raw IRC commands to the server.',
+	'config'=>'To view configuration: "config view optionname". To change configuration options, type "config optionname newvalue". You need to be an admin, obviously.',
+	'uptime'=>'View the uptime of the bot and the server which it is running on, if available.',
+	'help'=>'Get help for a command. You probably already know how to use this, because you\'re using it right now...?'
+);
+function core_help() {
+	global $channel, $args, $help, $commands, $settings;
+	if ($args[0]!=='') {
+		if (isset($help[$args[0]])) {
+			$response = 'Help for ' . strtolower($args[0]) . ': ' . $help[$args[0]];
+		} elseif (isset($commands[$args[0]])) {
+			$response = 'The command "' . strtolower($args[0])  . '" exists, but there is no help for it.';
+		} else {
+			$response = 'The command "' . strtolower($args[0])  . '" does not exist.';
+		}
+	} else {
+		$response = 'Usage: ' . $settings['commandchar'] . 'help ' . C_BOLD . 'command' . C_BOLD;
+	}
+	send_msg($channel,$response);
+}
 function core_uptime() {
 	global $channel;
 	$uptime = time()-START_TIME;
 	$response = 'Bot uptime is: ' . floor($uptime/60/60/24) . ' days, ' . ($uptime/60/60%24) . ' hours, ' . ($uptime/60%60) . ' minutes, and ' . ($uptime%60) . ' seconds. ';
 	$uptime = @file_get_contents('/proc/uptime');
 	if ($uptime) {
+		$uptime = explode('.',$uptime);
 		$uptime = preg_replace('/\D/', '', $uptime[0]);
 		$response .= 'Server uptime is: ' . floor($uptime/60/60/24) . ' days, ' . ($uptime/60/60%24) . ' hours, ' . ($uptime/60%60) . ' minutes, and ' . ($uptime%60) . ' seconds. ';
 	}
@@ -56,8 +89,8 @@ function core_ping() {
 	send_msg($channel,'pong');
 }
 function core_whoami() {
-	global $channel,$nick;
-	send_msg($channel,'You are ' . $nick . '.');
+	global $channel,$nick,$buffwords,$admin;
+	send_msg($channel,'You are ' . $nick . ' (' . $buffwords[0] . '), and you are level ' . (int)$admin);
 }
 function core_echo() {
 	global $admin,$buffwords,$channel,$arguments;
@@ -68,20 +101,24 @@ function core_echo() {
 	}
 }
 function core_module_unload() {
-	global $admin,$buffwords,$commands,$nick,$function_map,$channel,$hook_map,$hooks;
+	global $admin,$buffwords,$commands,$nick,$function_map,$channel,$hook_map,$hooks,$help_map,$help;
 	if ($admin) {
 		$module = end(explode('/',$buffwords[4]));
 		if (is_array($function_map[$module])) {
 			$commands = array_diff($commands,$function_map[$module]);
+			unset($function_map[$module]);
 			if (is_array($hook_map[$module])) {
 				foreach ($hook_map[$module] as $hook_name => $hook_function) {
 					$hooks[$hook_name] = array_diff($hooks[$hook_name],array($hook_function));
 				}
 			}
+			if (is_array($help_map[$module])) {
+				$help = array_diff($help,$help_map[$module]);
+			}
 			send_msg($channel,'Module unloaded successfully!');
 			return true;
 		} else {
-			send_msg($channel,'Module not loaded.');
+			send_msg($channel,'Module is not loaded.');
 			return false;
 		}
 	} else {
@@ -146,7 +183,12 @@ function core_config() {
 	global $admin,$channel,$buffwords,$arguments,$settings,$config;
 	if ($buffwords[4]=='view') {
 		if (isset($settings[$buffwords[5]])) {
-			send_msg($channel,$buffwords[5] . ' is: ' . $settings[$buffwords[5]]);
+			$private = explode(',',$settings['configprivate']);
+			if (in_array(strtolower($buffwords[5],$private))) {
+				send_msg($channel,$buffwords[5] . ' is a private option.');
+			} else {
+				send_msg($channel,$buffwords[5] . ' is: ' . $settings[$buffwords[5]]);
+			}
 		} else {
 			send_msg($channel,'That configuration key does not exist.');
 		}
@@ -159,5 +201,13 @@ function core_config() {
 			$settings[$key] = $value;
 			save_settings(array('phpbot'=>$settings),$config);
 		}
+	}
+}
+function core_eval() {
+	global $admin,$channel;
+	if ($admin) {
+		eval($arguments);
+	} else {
+		send_msg($channel,'Boy, whatchu tryin\' to do?');
 	}
 }
