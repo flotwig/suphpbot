@@ -24,7 +24,6 @@ function text_rainbow() {
 }
 function text_bold() {
 	global $buffwords,$arguments;
-	$text = explode($settings['commandchar'] . 'bold ',2);
 	send_msg($buffwords[2],C_BOLD . $arguments);
 }
 function text_reverse() {
@@ -33,11 +32,9 @@ function text_reverse() {
 }
 function text_underline() {
 	global $buffwords,$arguments;
-	$text = explode($settings['commandchar'] . 'underline ',2);
 	send_msg($buffwords[2],C_UNDERLINE . $arguments);
 }
 function text_italic() {
 	global $buffwords,$arguments;
-	$text = explode($settings['commandchar'] . 'italic ',2);
 	send_msg($buffwords[2],C_ITALIC . $arguments);
 }

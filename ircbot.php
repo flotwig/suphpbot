@@ -26,6 +26,7 @@ $hooks = array('data_in'=>array(),
 // preload some modules
 $commands = array();
 $help = array();
+$loaded_modules = array();
 foreach ($premods as $premod) {
 	load_module($premod);
 }
@@ -207,7 +208,7 @@ function send_ctcp($target,$command) {
 }
 function load_module($modname) {
 	global $commands, $function_map, $hook_map, $hooks;
-	global $help, $help_map;
+	global $help, $help_map, $loaded_modules;
 	include_once('./modules/' . trim($modname) . '.php');
 	$commands = array_merge($commands,$function_map[trim($modname)]);
 	if (isset($hook_map[trim($modname)])) {
@@ -215,6 +216,7 @@ function load_module($modname) {
 			$hooks[$hook_id][] = $hook_function;
 		}
 	}
+	$loaded_modules[] = $modname;
 	if (is_array($help_map[trim($modname)])) {
 		$help = array_merge($help,$help_map[trim($modname)]);
 	}

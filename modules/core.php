@@ -101,7 +101,7 @@ function core_echo() {
 	}
 }
 function core_module_unload() {
-	global $admin,$buffwords,$commands,$nick,$function_map,$channel,$hook_map,$hooks,$help_map,$help;
+	global $admin,$buffwords,$commands,$nick,$function_map,$channel,$hook_map,$hooks,$help_map,$help,$loaded_modules;
 	if ($admin) {
 		$module = end(explode('/',$buffwords[4]));
 		if (is_array($function_map[$module])) {
@@ -115,6 +115,7 @@ function core_module_unload() {
 			if (is_array($help_map[$module])) {
 				$help = array_diff($help,$help_map[$module]);
 			}
+			$loaded_modules = array_diff(array($module),$loaded_modules);
 			send_msg($channel,'Module unloaded successfully!');
 			return true;
 		} else {
@@ -144,13 +145,9 @@ function core_module_load() {
 	}
 }
 function core_command_list() {
-	global $commands,$channel,$nick,$function_map,$arguments;
+	global $commands,$channel,$nick,$function_map,$arguments,$loaded_modules;
 	if (!is_array($function_map[$arguments])) {
-		foreach ($function_map as $module => $coms) {
-			$ocomm[] = $module;
-		}
-		sort($ocomm);
-		$ocomm = implode(', ',$ocomm);
+		$ocomm = implode(', ',$loaded_modules);
 		send_msg($channel,'Modules loaded: ' . $ocomm);
 	} else {
 		foreach ($function_map[$arguments] as $command => $function) {
