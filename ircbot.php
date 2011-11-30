@@ -64,63 +64,65 @@ while (1) {
 				$arguments = trim(implode(' ',$bw));
 				$args = explode(' ',$arguments);
 				$ignore = explode(',',$settings['ignore']);
-				call_hook('data_in');
-				echo '[IN]' . "\t" . $buffer . "\r\n";
-				if ($buffwords[1]=='002') {
-					// The server just sent us something. We're in.
-					if ($settings['nickserv_pass']!=='') {
-						// Let's identify before we join any channels.
-						send_msg($settings['nickserv_nick'],'IDENTIFY ' . $settings['nickserv_pass']);
-					}
-					$channels = explode(',',$settings['channels']);
-					foreach ($channels as $channel) {
-						send('JOIN ' . trim($channel));
-					}
-				} elseif ($buffwords[1]=='433') {
-					// Nick collision!
-					send('NICK ' . $settings['nick'] . '_' . rand(100,999));
-				} elseif ($buffwords[0]=='PING') {
-					send('PONG ' . str_replace(array("\n","\r"),'',end(explode(' ',$buffer,2))));
-				} elseif (($buffwords[1]=='PRIVMSG'||$buffwords[1]=='NOTICE')&&$in_convo&&ord(trim(substr($buffwords[3],1)))==1) {
-					// We're in a CTCP. Act like it.
-					// acc to http://www.irchelp.org/irchelp/rfc/ctcpspec.html
-					$command = trim(substr($buffwords[3],2)); // Let's crop out the first two characters of what they sent, because it's just a colon and a C_CTCP.
-					$command = strtoupper(rtrim($command,C_CTCP)); // Now we have to take off any trailing C_CTCPs
-					$arguments = rtrim($arguments,C_CTCP); // Yes, the arguments too.
-					call_hook('ctcp_in'); // we just got a ctcp, anybody want to hook up?
-					if ($command=='VERSION'||$command=='FINGER'||$command=='USERINFO') {
-						send_ctcp($channel,$command . ' ' . IRC_VERSION);
-					} elseif ($command=='PING') {
-						send_ctcp($channel,$command . ' ' . time());
-					} elseif ($command=='TIME') {
-						send_ctcp($channel,$command . ' ' . date('D M d H:i:s Y T'));
-					} elseif ($command=='ERRMSG') {
-						// I don't really understand this one, so Imma just echo, 'kay
-						send_ctcp($channel,$command . ' ' . $arguments);
-					} elseif ($command=='SOURCE') {
-						send_ctcp($channel,$command . ' For a copy of me, visit https://github.com/flotwig/suphpbot');
-					} elseif ($command=='CLIENTINFO') {
-						send_ctcp($channel,$command . ' I know these CTCP commands: PING TIME ERRMSG SOURCE CLIENTINFO VERSION FINGER USERINFO');
-					}
-				} elseif ($buffwords[1]=='PRIVMSG'&&((substr($buffwords[3],1,strlen($settings['commandchar']))==$settings['commandchar'])||$in_convo)) {
-					if ($in_convo) {
-						$command = trim(substr($buffwords[3],1));
-					} else {
-						$command = trim(substr($buffwords[3],2));
-					}
-					$command = strtolower($command);
-					$blocked = explode(',',$settings['blockedcommands']);
-					if ($lastsent[$hostname]<(time()-$settings['floodtimer'])) {
-						$lastsent[$hostname]=time();
-						if (in_array($hostname,$ignore)) {
-							// do nothing - we're ignoring them :p
+				if (!in_array($nick,$ignore)) {
+					call_hook('data_in');
+					echo '[IN]' . "\t" . $buffer . "\r\n";
+					if ($buffwords[1]=='002') {
+						// The server just sent us something. We're in.
+						if ($settings['nickserv_pass']!=='') {
+							// Let's identify before we join any channels.
+							send_msg($settings['nickserv_nick'],'IDENTIFY ' . $settings['nickserv_pass']);
+						}
+						$channels = explode(',',$settings['channels']);
+						foreach ($channels as $channel) {
+							send('JOIN ' . trim($channel));
+						}
+					} elseif ($buffwords[1]=='433') {
+						// Nick collision! a waooo
+						send('NICK ' . $settings['nick'] . '_' . rand(100,999));
+					} elseif ($buffwords[0]=='PING') {
+						send('PONG ' . str_replace(array("\n","\r"),'',end(explode(' ',$buffer,2))));
+					} elseif (($buffwords[1]=='PRIVMSG'||$buffwords[1]=='NOTICE')&&$in_convo&&ord(trim(substr($buffwords[3],1)))==1) {
+						// We're in a CTCP. Act like it.
+						// acc to http://www.irchelp.org/irchelp/rfc/ctcpspec.html
+						$command = trim(substr($buffwords[3],2)); // Let's crop out the first two characters of what they sent, because it's just a colon and a C_CTCP.
+						$command = strtoupper(rtrim($command,C_CTCP)); // Now we have to take off any trailing C_CTCPs
+						$arguments = rtrim($arguments,C_CTCP); // Yes, the arguments too.
+						call_hook('ctcp_in'); // we just got a ctcp, anybody want to hook up?
+						if ($command=='VERSION'||$command=='FINGER'||$command=='USERINFO') {
+							send_ctcp($channel,$command . ' ' . IRC_VERSION);
+						} elseif ($command=='PING') {
+							send_ctcp($channel,$command . ' ' . time());
+						} elseif ($command=='TIME') {
+							send_ctcp($channel,$command . ' ' . date('D M d H:i:s Y T'));
+						} elseif ($command=='ERRMSG') {
+							// I don't really understand this one, so Imma just echo, 'kay
+							send_ctcp($channel,$command . ' ' . $arguments);
+						} elseif ($command=='SOURCE') {
+							send_ctcp($channel,$command . ' For a copy of me, visit https://github.com/flotwig/suphpbot');
+						} elseif ($command=='CLIENTINFO') {
+							send_ctcp($channel,$command . ' I know these CTCP commands: PING TIME ERRMSG SOURCE CLIENTINFO VERSION FINGER USERINFO');
+						}
+					} elseif ($buffwords[1]=='PRIVMSG'&&((substr($buffwords[3],1,strlen($settings['commandchar']))==$settings['commandchar'])||$in_convo)) {
+						if ($in_convo) {
+							$command = trim(substr($buffwords[3],1));
 						} else {
-							if (in_array($command,$blocked)) {
-								send_msg($channel,$command . ' is a blocked command. Contact a bot administrator for guidance.');
-							} elseif (function_exists($commands[$command])) {
-								call_user_func($commands[$command]);
+							$command = trim(substr($buffwords[3],2));
+						}
+						$command = strtolower($command);
+						$blocked = explode(',',$settings['blockedcommands']);
+						if ($lastsent[$hostname]<(time()-$settings['floodtimer'])) {
+							$lastsent[$hostname]=time();
+							if (in_array($hostname,$ignore)) {
+								// do nothing - we're ignoring them :p
 							} else {
-								send_msg($channel,$command . ' is not a valid command. Maybe you need to load a plugin?');
+								if (in_array($command,$blocked)) {
+									send_msg($channel,$command . ' is a blocked command. Contact a bot administrator for guidance.');
+								} elseif (function_exists($commands[$command])) {
+									call_user_func($commands[$command]);
+								} else {
+									send_msg($channel,$command . ' is not a valid command. Maybe you need to load a plugin?');
+								}
 							}
 						}
 					}
