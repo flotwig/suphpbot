@@ -37,8 +37,7 @@ while (1) {
 		echo 'Unable to connect! Retrying in 5...' . "\n";
 		sleep(5);
 	} else {
-		stream_set_timeout($socket, 0, 1);
-		stream_set_blocking($socket, 0); 
+		stream_set_blocking($socket, 1); // we fix the dreaded 100% CPU issue
 		if ($settings['pass']!=='') {
 			send('PASS ' . $settings['pass']);
 		}
