@@ -89,3 +89,5 @@ the meanings of each option in ircconfig.ini:
 		cannot view.
 	* blockedcommands - Comma-separated list of commands that nobody is
 		allowed to run for one reason or another.
+	* control_codes - Should the bot send control codes on channels and in private
+		messages? 1 for yes, 2 for no!

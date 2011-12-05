@@ -203,7 +203,7 @@ function shell_send($message) {
 }
 function send_ctcp($target,$command) {
 	call_hook('ctcp_out');
-	send('NOTICE ' . $target . ' :' . fx('CTCP',$command));
+	send('NOTICE ' . $target . ' :' . fx('CTCP',$command,TRUE));
 }
 function load_module($modname) {
 	global $commands, $function_map, $hook_map, $hooks;
@@ -220,9 +220,9 @@ function load_module($modname) {
 		$help = array_merge($help,$help_map[trim($modname)]);
 	}
 }
-function fx($filter,$text) {
+function fx($filter,$text,$ignorecc=FALSE) {
 	global $settings;
-	if (defined('C_' . strtoupper($filter)) && $settings['control_codes']!==0) {
+	if (defined('C_' . strtoupper($filter)) && ($settings['control_codes']!==0&&!$ignorecc)) {
 		return constant('C_' . strtoupper($filter)) . $text . constant('C_' . strtoupper($filter));
 	} else {
 		return $text;
