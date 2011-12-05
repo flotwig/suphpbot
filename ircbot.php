@@ -10,7 +10,7 @@ if (count(getopt('c:'))>0) {
 ini_set('error_reporting',E_ALL-E_NOTICE);
 load_settings();
 define('START_TIME',time()); // so we can have core::uptime
-define('IRC_VERSION','phpbot version 0.1b - /msg me about for more information');
+define('IRC_VERSION','suphpbot version 0.2b - https://github.com/flotwig/suphpbot');
 define('C_CTCP', chr(1));
 // thanks, tutorialnut.com, for the control codes!
 define('C_BOLD', chr(2));
@@ -149,7 +149,7 @@ function send_msg($target,$message) {
 		$message[] = 'The output for your command was too long to send fully.';
 	}
 	foreach ($message as $msg) {
-		send ('PRIVMSG ' . $target . ' :' . C_BOLD . $nick .  ': ' . C_BOLD . xtrim($msg));
+		send ('PRIVMSG ' . $target . ' :' . fx('BOLD',$nick . ': ') . xtrim($msg));
 	}
 }
 // borrowed from gtoxic of avestribot, who borrowed it from somebody else...
@@ -203,7 +203,7 @@ function shell_send($message) {
 }
 function send_ctcp($target,$command) {
 	call_hook('ctcp_out');
-	send('NOTICE ' . $target . ' :' . C_CTCP . $command . C_CTCP);
+	send('NOTICE ' . $target . ' :' . fx('CTCP',$command));
 }
 function load_module($modname) {
 	global $commands, $function_map, $hook_map, $hooks;
@@ -218,6 +218,14 @@ function load_module($modname) {
 	$loaded_modules[] = $modname;
 	if (is_array($help_map[trim($modname)])) {
 		$help = array_merge($help,$help_map[trim($modname)]);
+	}
+}
+function fx($filter,$text) {
+	global $settings;
+	if (defined('C_' . strtoupper($filter)) && $settings['control_codes']!==0) {
+		return constant('C_' . strtoupper($filter)) . $text . constant('C_' . strtoupper($filter));
+	} else {
+		return $text;
 	}
 }
 ?> 

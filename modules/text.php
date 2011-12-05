@@ -2,10 +2,10 @@
 // Modify text
 $function_map['text'] = array(
 	'rainbow'=>'text_rainbow',
-	'bold'=>'text_bold',
-	'reverse'=>'text_reverse',
-	'underline'=>'text_underline',
-	'italic'=>'text_italic'
+	'bold'=>'text_generic_modify',
+	'reverse'=>'text_generic_modify',
+	'underline'=>'text_generic_modify',
+	'italic'=>'text_generic_modify'
 );
 function text_rainbow() {
 	global $channel,$arguments;
@@ -22,19 +22,7 @@ function text_rainbow() {
 	}
 	send_msg($channel,$rainbows);
 }
-function text_bold() {
-	global $buffwords,$arguments;
-	send_msg($buffwords[2],C_BOLD . $arguments);
-}
-function text_reverse() {
-	global $buffwords,$arguments;
-	send_msg($buffwords[2],C_REVERSE . $arguments);
-}
-function text_underline() {
-	global $buffwords,$arguments;
-	send_msg($buffwords[2],C_UNDERLINE . $arguments);
-}
-function text_italic() {
-	global $buffwords,$arguments;
-	send_msg($buffwords[2],C_ITALIC . $arguments);
+function text_generic_modify() {
+	global $channel,$arguments,$command;
+	send_msg($channel,fx($command,$arguments));
 }

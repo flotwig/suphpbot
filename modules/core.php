@@ -43,7 +43,7 @@ function core_help() {
 			$response = 'The command "' . strtolower($args[0])  . '" does not exist.';
 		}
 	} else {
-		$response = 'Usage: ' . $settings['commandchar'] . 'help ' . C_BOLD . 'command' . C_BOLD;
+		$response = 'Usage: ' . $settings['commandchar'] . 'help ' . fx('BOLD','command');
 	}
 	send_msg($channel,$response);
 }
