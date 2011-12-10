@@ -16,6 +16,7 @@ $function_map['core'] = array(
 	'uptime'=>'core_uptime',
 	'help'=>'core_help',
 	'eval'=>'core_eval',
+	'restart'=>'core_restart',
 );
 $help_map['core'] = array(
 	'load'=>'Loads a module. Type "load modulename" as an admin to load modules.',
@@ -32,6 +33,7 @@ $help_map['core'] = array(
 	'uptime'=>'View the uptime of the bot and the server which it is running on, if available.',
 	'help'=>'Get help for a command. You probably already know how to use this, because you\'re using it right now...?',
 	'eval'=>'Runs raw arguments through PHP eval(). Disabled by default.',
+	'restart'=>'Start another instance of the bot and kill this one.',
 );
 function core_help() {
 	global $channel, $args, $help, $commands, $settings;
@@ -197,5 +199,17 @@ function core_eval() {
 		eval($arguments);
 	} else {
 		send_msg($channel,'Boy, whatchu tryin\' to do?');
+	}
+}
+function core_restart() {
+	global $admin,$settings,$channel,$socket;
+	if (!$admin) {
+		send_msg($channel,'Be an admin, then we\'ll talk.');
+	} else {
+		send('QUIT ' . $settings['quitmsg']);
+		shell_send('Attempting to restart the bot...');
+		fclose($socket);
+		fork_bot();
+		die();
 	}
 }

@@ -1,17 +1,16 @@
 <?php
+/*
+	suphpbot - A modular, procedural IRC bot written entirely in PHP.
+	https://github.com/flotwig/suphpbot
+	(c)2011 Zachary Bloomquist zbloomq@live.com http://za.chary.us/
+*/
 if (PHP_SAPI !== 'cli') { die('This script can\'t be run from a web browser.'); }
 set_time_limit(0);
 ini_set('error_reporting',E_ALL-E_NOTICE);
 $config = 'ircconfig.ini';
 load_settings();
 if (count(getopt(NULL,array('running')))<1) {
-	if ($settings['logging']) {
-		shell_send(shell_exec('echo "php ' . basename(__FILE__) . ' --running >> ' . $settings['logfile'] . '" | at now'));
-		shell_send('Forked ' . basename(__FILE__) . ' into background using at. Logging to raw.log.');
-	} else {
-		shell_send(shell_exec('echo "php ' . basename(__FILE__) . ' --running" | at now'));
-		shell_send('Forked ' . basename(__FILE__) . ' into background using at.');
-	}
+	fork_bot();
 	die();
 }
 shell_send('Script started.');
@@ -280,6 +279,16 @@ function fx($filter,$text,$ignorecc=FALSE) {
 		return constant('C_' . strtoupper($filter)) . $text . constant('C_' . strtoupper($filter));
 	} else {
 		return $text;
+	}
+}
+function fork_bot() {
+	global $settings;
+	if ($settings['logging']) {
+		shell_send(shell_exec('echo "php ' . basename(__FILE__) . ' --running >> ' . $settings['logfile'] . '" | at now'));
+		shell_send('Forked ' . basename(__FILE__) . ' into background using at. Logging to raw.log.');
+	} else {
+		shell_send(shell_exec('echo "php ' . basename(__FILE__) . ' --running" | at now'));
+		shell_send('Forked ' . basename(__FILE__) . ' into background using at.');
 	}
 }
 ?> 
