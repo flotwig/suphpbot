@@ -1,14 +1,20 @@
 <?php
 if (PHP_SAPI !== 'cli') { die('This script can\'t be run from a web browser.'); }
 set_time_limit(0);
-$config = 'ircconfig.ini';
-if (count(getopt('c:'))>0) {
-	$config = getopt('c:');
-	var_dump($config);
-	$config = $config['c'];
-}
 ini_set('error_reporting',E_ALL-E_NOTICE);
+$config = 'ircconfig.ini';
 load_settings();
+if (count(getopt(NULL,array('running')))<1) {
+	if ($settings['logging']) {
+		shell_send(shell_exec('echo "php ' . basename(__FILE__) . ' --running >> ' . $settings['logfile'] . '" | at now'));
+		shell_send('Forked ' . basename(__FILE__) . ' into background using at. Logging to raw.log.');
+	} else {
+		shell_send(shell_exec('echo "php ' . basename(__FILE__) . ' --running" | at now'));
+		shell_send('Forked ' . basename(__FILE__) . ' into background using at.');
+	}
+	die();
+}
+shell_send('Script started.');
 define('START_TIME',time()); // so we can have core::uptime
 define('IRC_VERSION','suphpbot version 0.3b - https://github.com/flotwig/suphpbot');
 define('C_CTCP', chr(1));
@@ -71,7 +77,7 @@ while (1) {
 				$ignore = explode(',',$settings['ignore']);
 				if (!in_array($hostname,$ignore)) {
 					call_hook('data_in');
-					echo '[IN]' . "\t" . $buffer . "\r\n";
+					shell_send($buffer,'IN');
 					if ($buffwords[1]=='002') {
 						// The server just sent us something. We're in.
 						// usermodes are important
@@ -162,7 +168,7 @@ function send($raw) {
 	global $socket;
 	call_hook('data_out');
 	fwrite($socket,"{$raw}\n\r");
-	echo '[OUT]' . "\t" . $raw . "\n";
+	shell_send($raw,'OUT');
 }
 function send_msg($target,$message) {
 	global $nick,$settings;
@@ -230,8 +236,8 @@ function call_hook($hook) {
 		call_user_func($hookah);
 	}
 }
-function shell_send($message) {
-	echo "[PHP]\t" . $message . "\n";
+function shell_send($message,$type='NOTE') {
+	echo '[' . date('H:i:s m-d-Y') . '] [' . $type . ']' . "\t" . $message . "\n";
 }
 function send_ctcp($target,$command) {
 	call_hook('ctcp_out');
@@ -240,16 +246,18 @@ function send_ctcp($target,$command) {
 function load_module($modname) {
 	global $commands, $function_map, $hook_map, $hooks;
 	global $help, $help_map, $loaded_modules;
-	include_once('./modules/' . trim($modname) . '.php');
-	$commands = array_merge($commands,$function_map[trim($modname)]);
-	if (isset($hook_map[trim($modname)])) {
-		foreach ($hook_map[trim($modname)] as $hook_id => $hook_function) {
-			$hooks[$hook_id][] = $hook_function;
+	$load = @include_once('./modules/' . trim($modname) . '.php');
+	if ($load) {
+		$commands = array_merge($commands,$function_map[trim($modname)]);
+		if (isset($hook_map[trim($modname)])) {
+			foreach ($hook_map[trim($modname)] as $hook_id => $hook_function) {
+				$hooks[$hook_id][] = $hook_function;
+			}
 		}
-	}
-	$loaded_modules[] = $modname;
-	if (is_array($help_map[trim($modname)])) {
-		$help = array_merge($help,$help_map[trim($modname)]);
+		$loaded_modules[] = $modname;
+		if (is_array($help_map[trim($modname)])) {
+			$help = array_merge($help,$help_map[trim($modname)]);
+		}
 	}
 }
 function unload_module($modname) {

@@ -153,6 +153,7 @@ function core_quit() {
 	if ($admin) {
 		send('QUIT :' . $settings['quitmsg']);
 		fclose($socket);
+		shell_send('Bot killed by administrator - see above for details.');
 		die();
 	} else {
 		send_msg($channel,'If you really want to quit so bad, maybe you should identify as an admin first!');
