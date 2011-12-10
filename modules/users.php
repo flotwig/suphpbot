@@ -66,11 +66,22 @@ function users_register() {
 	} elseif (count($args)!==2) {
 		send_msg($channel,'Command usage: register USERNAME PASSWORD');
 	} else {
-		$userarray[] = array($args[0],hash('sha256',$args[1]),$hostname,0);
-		if (users_functions_save($userarray)) {
-			send_msg($channel,'You were successfully signed up. Now, you can identify.');
+		foreach ($userarray as $userline) {
+			if (strtolower($args[0])==strtolower($userline[0])) {
+				$error = 'That username is already registered.';
+			} elseif (strtolower($hostname)==strtolower($userline[2])) {
+				$error = 'There is already an account registered to this hostname.';
+			}
+		}
+		if ($error=='') {
+			$userarray[] = array($args[0],hash('sha256',$args[1]),$hostname,0);
+			if (users_functions_save($userarray)) {
+				send_msg($channel,'You were successfully signed up. Now, you can identify.');
+			} else {
+				send_msg($channel,'Registration failed.');
+			}
 		} else {
-			send_msg($channel,'Registration failed.');
+			send_msg($channel,$error);
 		}
 	}
 }
@@ -92,7 +103,7 @@ function users_hook_data_in() {
 	global $buffwords,$usersessions,$hostname,$admin;
 	// if they quit, let's log them out
 	if ($buffwords[1]=='QUIT') {
-		$usersessions[$hostname] = NULL;
+		unset($usersessions[$hostname]);
 	}
 	// is our user an admin?
 	if (is_array($usersessions[$hostname])) {

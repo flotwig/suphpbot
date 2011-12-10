@@ -24,5 +24,5 @@ function text_rainbow() {
 }
 function text_generic_modify() {
 	global $channel,$arguments,$command;
-	send_msg($channel,fx($command,$arguments));
+	send_msg($channel,fx($command,$arguments,TRUE));
 }

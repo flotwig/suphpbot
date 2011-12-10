@@ -15,7 +15,7 @@ $function_map['core'] = array(
 	'config'=>'core_config',
 	'uptime'=>'core_uptime',
 	'help'=>'core_help',
-	'eval'=>'core_eval'
+	'eval'=>'core_eval',
 );
 $help_map['core'] = array(
 	'load'=>'Loads a module. Type "load modulename" as an admin to load modules.',
@@ -30,7 +30,8 @@ $help_map['core'] = array(
 	'raw'=>'Send raw IRC commands to the server.',
 	'config'=>'To view configuration: "config view optionname". To change configuration options, type "config optionname newvalue". You need to be an admin, obviously.',
 	'uptime'=>'View the uptime of the bot and the server which it is running on, if available.',
-	'help'=>'Get help for a command. You probably already know how to use this, because you\'re using it right now...?'
+	'help'=>'Get help for a command. You probably already know how to use this, because you\'re using it right now...?',
+	'eval'=>'Runs raw arguments through PHP eval(). Disabled by default.',
 );
 function core_help() {
 	global $channel, $args, $help, $commands, $settings;
@@ -62,17 +63,16 @@ function core_uptime() {
 function core_about() {
 	global $channel,$arguments,$settings;
 	$abouts = array(
-		'author'=>'suphpbot is coded by flotwig. http://za.chary.us/',
-		'url'=>'You can download suphpbot at https://github.com/flotwig/suphpbot',
-		'about'=>'suphpbot is a modular IRC bot written entirely in PHP.',
+		'author'=>'suphpbot is coded by flotwig at http://za.chary.us/',
+		'credits'=>'Thanks to the bot-obsessed folks at irc.x10hosting.com, I stole a lot of ideas from them. GtoXic, Dead-i, Sierra and stpvoice are just a few of the people who helped out a lot. Also, thanks to Sharky for not k-lining me :D',
+		'download'=>'You can download suphpbot at https://github.com/flotwig/suphpbot',
+		'the bot'=>'suphpbot is a modular IRC bot written entirely in PHP.',
 		'version'=>IRC_VERSION
 	);
-	$abts=array();
-	foreach ($abouts as $cmd => $abt) { $abts[] = $cmd; }
 	if (isset($abouts[$arguments])) {
 		send_msg($channel,$abouts[$arguments]);
 	} else {
-		send_msg($channel,'What would you like to know more about? ' . $settings['commandchar'] . 'about ' . implode(', ' . $settings['commandchar'] . 'about ' . $abts));
+		send_msg($channel,'What would you like to know more about? ' . $settings['commandchar'] . 'about ' . implode(', ' . $settings['commandchar'] . 'about ', array_keys($abouts)));
 	}
 }
 function core_reload() {
@@ -105,17 +105,7 @@ function core_module_unload() {
 	if ($admin) {
 		$module = end(explode('/',$buffwords[4]));
 		if (is_array($function_map[$module])) {
-			$commands = array_diff($commands,$function_map[$module]);
-			unset($function_map[$module]);
-			if (is_array($hook_map[$module])) {
-				foreach ($hook_map[$module] as $hook_name => $hook_function) {
-					$hooks[$hook_name] = array_diff($hooks[$hook_name],array($hook_function));
-				}
-			}
-			if (is_array($help_map[$module])) {
-				$help = array_diff($help,$help_map[$module]);
-			}
-			$loaded_modules = array_diff(array($module),$loaded_modules);
+			unload_module($module);
 			send_msg($channel,'Module unloaded successfully!');
 			return true;
 		} else {

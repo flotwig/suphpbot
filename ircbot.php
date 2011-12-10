@@ -10,7 +10,7 @@ if (count(getopt('c:'))>0) {
 ini_set('error_reporting',E_ALL-E_NOTICE);
 load_settings();
 define('START_TIME',time()); // so we can have core::uptime
-define('IRC_VERSION','suphpbot version 0.2b - https://github.com/flotwig/suphpbot');
+define('IRC_VERSION','suphpbot version 0.3b - https://github.com/flotwig/suphpbot');
 define('C_CTCP', chr(1));
 // thanks, tutorialnut.com, for the control codes!
 define('C_BOLD', chr(2));
@@ -27,26 +27,30 @@ $hooks = array('data_in'=>array(),
 $commands = array();
 $help = array();
 $loaded_modules = array();
+$strikes = array();
 foreach ($premods as $premod) {
 	load_module($premod);
 }
 $lastsent = array(); // Array of timestamps for last command from nicks - helps prevent flooding
+$bnick = $settings['nick'];
+$tries = 0;
 while (1) {
-	$socket = fsockopen($settings['server'], $settings['port'], $errno, $errstr, 20);
+	$tries++;
+	$socket = @fsockopen($settings['server'], $settings['port'], $errno, $errstr, 20);
 	if (!$socket) {
-		echo 'Unable to connect! Retrying in 5...' . "\n";
-		sleep(5);
+		shell_send('Unable to connect! Retrying in ' . round(pow(5,.5*$tries)) . ' seconds...');
 	} else {
 		stream_set_blocking($socket, 1); // we fix the dreaded 100% CPU issue
 		if ($settings['pass']!=='') {
 			send('PASS ' . $settings['pass']);
 		}
 		send('USER ' . $settings['ident'] . ' 8 * :' . $settings['realname']);
-		send('NICK ' . $settings['nick']);
+		send('NICK ' . $bnick);
 		while (!feof($socket)) {
 			$buffer = fgets($socket);
 			$buffer = str_replace(array("\n","\r"),'',$buffer);
 			if (strlen($buffer)>0) {	// we don't want to process anything if there's no new data. derp	
+				$buffer = xtrim($buffer); // get rid of doubles
 				$admin = FALSE;
 				$buffwords = explode(' ',$buffer);
 				$nick = explode('!',$buffwords[0]);
@@ -59,16 +63,21 @@ while (1) {
 					$in_convo = FALSE;
 				}
 				$hostname = end(explode('@',$buffwords[0]));
+				$hostmask = $hostname;
 				$bw = $buffwords;
 				$bw[0]=NULL; $bw[1]=NULL; $bw[2]=NULL; $bw[3]=NULL;
 				$arguments = trim(implode(' ',$bw));
 				$args = explode(' ',$arguments);
 				$ignore = explode(',',$settings['ignore']);
-				if (!in_array($nick,$ignore)) {
+				if (!in_array($hostname,$ignore)) {
 					call_hook('data_in');
 					echo '[IN]' . "\t" . $buffer . "\r\n";
 					if ($buffwords[1]=='002') {
 						// The server just sent us something. We're in.
+						// usermodes are important
+						if (!empty($settings['automode'])) {
+							send('MODE ' . $bnick . ' ' . $automode);
+						}
 						if ($settings['nickserv_pass']!=='') {
 							// Let's identify before we join any channels.
 							send_msg($settings['nickserv_nick'],'IDENTIFY ' . $settings['nickserv_pass']);
@@ -79,7 +88,8 @@ while (1) {
 						}
 					} elseif ($buffwords[1]=='433') {
 						// Nick collision! a waooo
-						send('NICK ' . $settings['nick'] . '_' . rand(100,999));
+						$bnick = $settings['nick'] . '_' . mt_rand(100,999);
+						send('NICK ' . $bnick);
 					} elseif ($buffwords[0]=='PING') {
 						send('PONG ' . str_replace(array("\n","\r"),'',end(explode(' ',$buffer,2))));
 					} elseif (($buffwords[1]=='PRIVMSG'||$buffwords[1]=='NOTICE')&&$in_convo&&ord(trim(substr($buffwords[3],1)))==1) {
@@ -111,7 +121,7 @@ while (1) {
 						}
 						$command = strtolower($command);
 						$blocked = explode(',',$settings['blockedcommands']);
-						if ($lastsent[$hostname]<(time()-$settings['floodtimer'])) {
+						if ($lastsent[$hostname]<(time()-$settings['floodtimer'])||$admin) { // we let admins flood the bot lul
 							$lastsent[$hostname]=time();
 							if (in_array($hostname,$ignore)) {
 								// do nothing - we're ignoring them :p
@@ -119,10 +129,25 @@ while (1) {
 								if (in_array($command,$blocked)) {
 									send_msg($channel,$command . ' is a blocked command. Contact a bot administrator for guidance.');
 								} elseif (function_exists($commands[$command])) {
+									call_hook('command_' . $command);
 									call_user_func($commands[$command]);
 								} else {
 									send_msg($channel,$command . ' is not a valid command. Maybe you need to load a plugin?');
 								}
+							}
+						} else {
+							// they dun goofed - bot spamming? not on my watch, let's add a strike to they
+							if (!isset($strikes[$hostmask])) {
+								$strikes[$hostmask] = 1;
+							} else {
+								$strikes[$hostmask]++;
+							}
+							if ($strikes[$hostmask]==$settings['strikes']) {
+								$ignore[] = $hostmask;
+								$settings['ignore'] = implode(',',$ignore);
+								save_settings($settings,$config);
+								send_msg($channel,'Hi, you\'ve been ignored by the bot for flooding! Congratulations! Contact a bot administrator for guidance.');
+								$strikes[$hostmask]=0;
 							}
 						}
 					}
@@ -130,6 +155,7 @@ while (1) {
 			}
 		}
 	}
+	sleep(round(pow(5,.5*$tries))); // reconnecting too fast like woah
 }
 // much thanks to gtoxic of avestribot for helping me realize my stupid mistake here
 function send($raw) {
@@ -149,7 +175,13 @@ function send_msg($target,$message) {
 		$message[] = 'The output for your command was too long to send fully.';
 	}
 	foreach ($message as $msg) {
-		send ('PRIVMSG ' . $target . ' :' . fx('BOLD',$nick . ': ') . xtrim($msg));
+		if ($settings['censor_output']==1) {
+			// so we don't hurt somebody's feelings with our wizard swears
+			$badwords = explode(',',$settings['censor_badwords']);
+			send ('PRIVMSG ' . $target . ' :' . fx('BOLD',$nick . ': ') . xtrim(str_replace($badwords,$settings['censor_word'],$msg)));
+		} else {
+			send ('PRIVMSG ' . $target . ' :' . fx('BOLD',$nick . ': ') . xtrim($msg)); // we use xtrim so that we don't send out funky whitespace
+		}
 	}
 }
 // borrowed from gtoxic of avestribot, who borrowed it from somebody else...
@@ -219,6 +251,20 @@ function load_module($modname) {
 	if (is_array($help_map[trim($modname)])) {
 		$help = array_merge($help,$help_map[trim($modname)]);
 	}
+}
+function unload_module($modname) {
+	global $commands,$function_map,$hook_map,$help_map,$loaded_modules,$hooks,$help;
+	$commands = array_diff($commands,$function_map[$modname]);
+	unset($function_map[$modname]);
+	if (is_array($hook_map[$modname])) {
+		foreach ($hook_map[$modname] as $hook_name => $hook_function) {
+			$hooks[$hook_name] = array_diff($hooks[$hook_name],array($hook_function));
+		}
+	}
+	if (is_array($help_map[$modname])) {
+		$help = array_diff($help,$help_map[$modname]);
+	}
+	$loaded_modules = array_diff(array($modname),$loaded_modules);
 }
 function fx($filter,$text,$ignorecc=FALSE) {
 	global $settings;
