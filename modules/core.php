@@ -194,7 +194,7 @@ function core_config() {
 	}
 }
 function core_eval() {
-	global $admin,$channel;
+	global $admin,$channel,$arguments;
 	if ($admin) {
 		eval($arguments);
 	} else {
