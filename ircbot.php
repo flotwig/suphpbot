@@ -27,7 +27,8 @@ define('C_UNDERLINE', chr(31));
 $hooks = array('data_in'=>array(),
 	'data_out'=>array(),
 	'ctcp_in'=>array(),
-	'ctcp_out'=>array());
+	'ctcp_out'=>array(),
+	'loop'=>array());
 // preload some modules
 $commands = array();
 $help = array();
@@ -54,7 +55,8 @@ while (1) {
 		while (!feof($socket)) {
 			$buffer = fgets($socket);
 			$buffer = str_replace(array("\n","\r"),'',$buffer);
-			if (strlen($buffer)>0) {	// we don't want to process anything if there's no new data. derp	
+			call_hook('loop');
+			if (strlen($buffer)>0) {	// we don't want to process anything if there's no new data. derp	\
 				$buffer = xtrim($buffer); // get rid of doubles
 				$admin = FALSE;
 				$buffwords = explode(' ',$buffer);
@@ -120,9 +122,9 @@ while (1) {
 						}
 					} elseif ($buffwords[1]=='PRIVMSG'&&((substr($buffwords[3],1,strlen($settings['commandchar']))==$settings['commandchar'])||$in_convo)) {
 						if ($in_convo) {
-							$command = trim(substr($buffwords[3],1));
+							$command = trim(substr($buffwords[3],strlen($settings['commandchar'])));
 						} else {
-							$command = trim(substr($buffwords[3],2));
+							$command = trim(substr($buffwords[3],strlen($settings['commandchar'])+1));
 						}
 						$command = strtolower($command);
 						$blocked = explode(',',$settings['blockedcommands']);
@@ -290,5 +292,21 @@ function fork_bot() {
 		shell_send(shell_exec('echo "php ' . basename(__FILE__) . ' --running" | at now'));
 		shell_send('Forked ' . basename(__FILE__) . ' into background using at.');
 	}
+}
+function get_response($command,$terminating,$musthave) {
+	global $socket;
+	send($command);
+	$response = array();
+	while(1) {
+		$buffer = trim(fgets($socket));
+		$bw = explode(' ',$buffer);
+		if ($bw[1]==$terminating) {
+			break;
+		}
+		if (strlen($buffer)>0&&$bw[1]==$musthave) {
+			$response[] = $buffer;
+		}
+	}
+	return $response;
 }
 ?> 
