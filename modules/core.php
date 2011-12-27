@@ -46,7 +46,7 @@ function core_help() {
 			$response = 'The command "' . strtolower($args[0])  . '" does not exist.';
 		}
 	} else {
-		$response = 'Usage: ' . $settings['commandchar'] . 'help ' . fx('BOLD','command');
+		$response = 'Usage: ' . $settings['commandchar'] . 'help ' . fx('BOLD','command') . ' - Use "help list" if you\'re just getting started with the bot.';
 	}
 	send_msg($channel,$response);
 }

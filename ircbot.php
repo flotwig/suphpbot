@@ -7,7 +7,12 @@
 if (PHP_SAPI !== 'cli') { die('This script can\'t be run from a web browser.'); }
 set_time_limit(0);
 ini_set('error_reporting',E_ALL-E_NOTICE);
-$config = 'ircconfig.ini';
+if (count(getopt('c:'))>0) {
+	$config = getopt('c:');
+	$config = $config['c'];
+} else {
+	$config = 'ircconfig.ini';
+}
 load_settings();
 if (count(getopt(NULL,array('running')))<1) {
 	fork_bot();
@@ -181,14 +186,13 @@ function send_msg($target,$message) {
 		$message = array_slice($message,0,intval($settings['maxsend']-1));
 		$message[] = 'The output for your command was too long to send fully.';
 	}
+	$badwords = explode(',',$settings['censor_badwords']);
 	foreach ($message as $msg) {
 		if ($settings['censor_output']==1) {
-			// so we don't hurt somebody's feelings with our wizard swears
-			$badwords = explode(',',$settings['censor_badwords']);
-			send ('PRIVMSG ' . $target . ' :' . fx('BOLD',$nick . ': ') . xtrim(str_replace($badwords,$settings['censor_word'],$msg)));
-		} else {
-			send ('PRIVMSG ' . $target . ' :' . fx('BOLD',$nick . ': ') . xtrim($msg)); // we use xtrim so that we don't send out funky whitespace
+			$msg = str_replace($badwords,$settings['censor_word'],$msg);
 		}
+		$msg = str_replace(array('%nick%','%message%'),array(fx('BOLD',$nick),xtrim($msg)),$settings['message_style']);
+		send('PRIVMSG ' . $target . ' :' . $msg);
 	}
 }
 // borrowed from gtoxic of avestribot, who borrowed it from somebody else...
@@ -277,19 +281,19 @@ function unload_module($modname) {
 }
 function fx($filter,$text,$ignorecc=FALSE) {
 	global $settings;
-	if (defined('C_' . strtoupper($filter)) && ($settings['control_codes']!==0&&!$ignorecc)) {
+	if (defined('C_' . strtoupper($filter)) && $settings['control_codes']!==0 && $ignorecc) {
 		return constant('C_' . strtoupper($filter)) . $text . constant('C_' . strtoupper($filter));
 	} else {
 		return $text;
 	}
 }
 function fork_bot() {
-	global $settings;
+	global $settings,$config;
 	if ($settings['logging']) {
-		shell_send(shell_exec('echo "php ' . basename(__FILE__) . ' --running >> ' . $settings['logfile'] . '" | at now'));
+		shell_send(shell_exec('echo "php ' . basename(__FILE__) . ' --running -c ' . $config . ' >> ' . $settings['logfile'] . '" | at now'));
 		shell_send('Forked ' . basename(__FILE__) . ' into background using at. Logging to raw.log.');
 	} else {
-		shell_send(shell_exec('echo "php ' . basename(__FILE__) . ' --running" | at now'));
+		shell_send(shell_exec('echo "php ' . basename(__FILE__) . ' --running -c ' . $config . '" | at now'));
 		shell_send('Forked ' . basename(__FILE__) . ' into background using at.');
 	}
 }
