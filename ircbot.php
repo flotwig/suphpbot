@@ -47,7 +47,11 @@ $bnick = $settings['nick'];
 $tries = 0;
 while (1) {
 	$tries++;
-	$socket = @fsockopen($settings['server'], $settings['port'], $errno, $errstr, 20);
+	if ($settings['ssl']==1) {
+		$socket = @fsockopen('ssl://' . $settings['server'], $settings['port'], $errno, $errstr, 20);
+	} else {
+		$socket = @fsockopen($settings['server'], $settings['port'], $errno, $errstr, 20);
+	}
 	if (!$socket) {
 		shell_send('Unable to connect! Retrying in ' . round(pow(5,.5*$tries)) . ' seconds...');
 	} else {
@@ -68,7 +72,7 @@ while (1) {
 				$nick = explode('!',$buffwords[0]);
 				$nick = substr($nick[0],1);
 				$channel = $buffwords[2];
-				if ($channel==$settings['nick']) {
+				if ($channel==$bnick) {
 					$in_convo = TRUE;
 					$channel = $nick;
 				} else {

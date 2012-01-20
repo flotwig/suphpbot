@@ -202,13 +202,6 @@ function internets_youtube() {
 		}
 	}
 }
-function internets_hook_snarf() {
-	global $channel,$args,$arguments;
-	if ($args[0]=='bing'||$args[0]=='google') {
-		$results = internets_bing_search(substr($arguments,5));
-		send_msg($channel,$results['SearchResponse']['Web']['Results'][0]['Url']);
-	}
-}
 function internets_bing() {
 	global $channel,$arguments;
 	$results = internets_bing_search($arguments);
@@ -221,4 +214,13 @@ function internets_bing() {
 		$resultsirc = implode(', ',$resultsirc);
 	}
 	send_msg($channel,'Results: ' . $resultsirc);
+}
+// snarf shits yo!
+function internets_hook_snarf() {
+	global $channel,$args,$arguments,$buffwords;
+	$snarf_command = strtolower(substr($buffwords[3],1));
+	if ($snarf_command=='bing'||$snarf_command=='google') {
+		$results = internets_bing_search(substr($arguments,5));
+		send_msg($channel,$results['SearchResponse']['Web']['Results'][0]['Url']);
+	}
 }

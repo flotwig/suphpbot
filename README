@@ -50,6 +50,7 @@ Here is a list of the central core commands:
 The bot comes prepackaged with tons of configuration options, changeable with the "config" command (see help config for more info). Here are the meanings of each option in ircconfig.ini:
 	* server - The hostname or IP of the IRC server to connect to.
 	* port - The port of the IRC server, usually 6667.
+	* ssl - If this is set to 1, the bot will attempt to connect via SSL using the port provided. Otherwise, set it to 0.
 	* channels - A comma-separated list of channels to join on startup.
 	* ignore - A comma-separated list of hostmasks to ignore.
 	* nick - The nick of the bot. If the nick is not available, it will add a random number to the end of this value.
