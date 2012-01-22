@@ -22,7 +22,9 @@ $function_map['internets'] = array(
 	't'=>'internets_translate',
 	'youtube'=>'internets_youtube',
 	'yt'=>'internets_youtube',
-	'bing'=>'internets_bing'
+	'bing'=>'internets_bing',
+	'whatpulse'=>'internets_whatpulse',
+	'pulse'=>'internets_whatpulse'
 );
 $help_map['internets'] = array(
 	'shorten'=>'Usage: "shorten [url]" - shortens the provided URL using j.mp',
@@ -42,7 +44,12 @@ $help_map['internets'] = array(
 	't'=>$help_map['internets']['translate'],
 	'youtube'=>'Search YouTube for videos.',
 	'yt'=>$help_map['internets']['youtube'],
-	'bing'=>'Search Bing!'
+	'bing'=>'Search Bing!',
+	'pulse'=>'Usage: "pulse [username]" - look up a WhatPulse user\'s stats!',
+	'whatpulse'=>$help_map['internets']['pulse']
+);
+$hook_map['internets'] = array(
+	'data_in'=>'internets_hook_snarf'
 );
 function internets_bing_search($string) {
 	$url = 'http://api.bing.net/json.aspx?AppId=' . BING_APPID;
@@ -50,9 +57,6 @@ function internets_bing_search($string) {
 	$url .= '&Sources=Web';
 	return json_decode(internets_get_contents($url),TRUE);
 }
-$hook_map['internets'] = array(
-	'data_in'=>'internets_hook_snarf'
-);
 function internets_get_contents($url,$post=NULL) {
 	$ch = curl_init();
 	curl_setopt_array($ch,array(
@@ -109,7 +113,7 @@ function internets_urban() {
 }
 function internets_ipinfo() {
 	global $args,$channel;
-	if (!filter_var($args[0],FILTER_VALIDATE_IP)) {
+	if (!filter_var($args[0],FILTER_VALIDATE_IP)&&!filter_var(gethostbyname($args[0]),FILTER_VALIDATE_IP)) {
 		send_msg($channel,'Usage: ipinfo 192.168.200.1. Be sure that you are supplying a valid IP address.');
 	} else {
 		$host = gethostbyaddr($args[0]);
@@ -185,7 +189,7 @@ function internets_translate() {
 		$to = $args[1];
 		unset($args[0]); unset($args[1]);
 		$t = internets_get_contents('http://api.microsofttranslator.com/v2/Ajax.svc/Translate?appId=' . BING_APPID . '&from=' . $from . '&to=' . $to . '&text=' . urlencode(implode(' ',$args)));
-		send_msg($channel,'Translation: ' . trim(substr($t,1),' "»¿'));
+		send_msg($channel,'Translation: ' . trim(substr($t,1)));
 	}
 }
 function internets_youtube() {
@@ -214,6 +218,20 @@ function internets_bing() {
 		$resultsirc = implode(', ',$resultsirc);
 	}
 	send_msg($channel,'Results: ' . $resultsirc);
+}
+function internets_whatpulse() {
+	global $channel,$arguments;
+	$wpapi = internets_get_contents('https://whatpulse.org/api/user.php?UserID=' . urlencode($arguments));
+	$wpxml = simplexml_load_string($wpapi);
+	if (!$wpxml) {
+		send_msg($channel,'The username specified does not exist.');
+	} else {
+		$wpout = (string)$wpxml->AccountName . ' joined WhatPulse on ' . (string)$wpxml->DateJoined . '. Since then, he has typed ' . number_format((int)$wpxml->TotalKeyCount) . ' keys, clicked ' . number_format((int)$wpxml->TotalMouseClicks) . ' times, and has moved his mouse ' . number_format((int)$wpxml->TotalMiles) . ' miles. He is ranked #' . number_format((int)$wpxml->Rank) . ' overall.';
+		if ((int)$wpxml->TeamID!==0) {
+			$wpout .= ' He is a member of the team "' . (string)$wpxml->TeamName . '", where he is ranked at #' . number_format((int)$wpxml->RankInTeam) . '.';
+		}
+		send_msg($channel,$wpout);
+	}
 }
 // snarf shits yo!
 function internets_hook_snarf() {

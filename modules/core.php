@@ -92,7 +92,7 @@ function core_ping() {
 }
 function core_whoami() {
 	global $channel,$nick,$buffwords,$admin;
-	send_msg($channel,'You are ' . $nick . ' (' . $buffwords[0] . '), and you are level ' . (int)$admin);
+	send_msg($channel,'You are ' . $nick . ' (' . substr($buffwords[0],1) . '), and you are level ' . (int)$admin);
 }
 function core_echo() {
 	global $admin,$buffwords,$channel,$arguments;
