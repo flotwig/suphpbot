@@ -4,6 +4,7 @@ define('JMP_USERNAME','o_350gb401dt');
 define('JMP_APIKEY','R_ab02f29376cbc60916f569645a9772a7');
 define('WUNDERGROUND_APIKEY','208a003e3946c0ca');
 define('BING_APPID','AC1581361F2ECCC01C4D49F143D4A14003712E4A');
+define('REDDIT_BASEURL','http://www.reddit.com/');
 $function_map['internets'] = array(
 	'shorten'=>'internets_shorten',
 	'urbandictionary'=>'internets_urban',
@@ -24,7 +25,8 @@ $function_map['internets'] = array(
 	'yt'=>'internets_youtube',
 	'bing'=>'internets_bing',
 	'whatpulse'=>'internets_whatpulse',
-	'pulse'=>'internets_whatpulse'
+	'pulse'=>'internets_whatpulse',
+	'karma'=>'internets_karma',
 );
 $help_map['internets'] = array(
 	'shorten'=>'Usage: "shorten [url]" - shortens the provided URL using j.mp',
@@ -46,10 +48,8 @@ $help_map['internets'] = array(
 	'yt'=>$help_map['internets']['youtube'],
 	'bing'=>'Search Bing!',
 	'pulse'=>'Usage: "pulse [username]" - look up a WhatPulse user\'s stats!',
-	'whatpulse'=>$help_map['internets']['pulse']
-);
-$hook_map['internets'] = array(
-	'data_in'=>'internets_hook_snarf'
+	'whatpulse'=>$help_map['internets']['pulse'],
+	'karma'=>'Retrieves karma stats and other info about a redditor.',
 );
 function internets_bing_search($string) {
 	$url = 'http://api.bing.net/json.aspx?AppId=' . BING_APPID;
@@ -57,6 +57,9 @@ function internets_bing_search($string) {
 	$url .= '&Sources=Web';
 	return json_decode(internets_get_contents($url),TRUE);
 }
+$hook_map['internets'] = array(
+	'data_in'=>'internets_hook_snarf'
+);
 function internets_get_contents($url,$post=NULL) {
 	$ch = curl_init();
 	curl_setopt_array($ch,array(
@@ -82,6 +85,20 @@ function internets_yql_query($query) {
 function internets_shorten_url($url) {
 	$surl = @internets_get_contents('http://api.bitly.com/v3/shorten?format=txt&domain=j.mp&login=' . JMP_USERNAME . '&apikey=' . JMP_APIKEY . '&longUrl=' . urlencode($url));
 	return $surl;
+}
+function internets_karma() {
+	global $user,$channel,$arguments;
+	$u = preg_replace('/[^a-zA-Z0-9\_]/','',$arguments);
+	$url = REDDIT_BASEURL . 'user/' . $u . '/about.json';
+	$json = internets_get_contents($url);
+	$json = json_decode($json,TRUE);
+	if (!$json||isset($json['error'])||$json['kind']!=='t2') {
+		send_msg($channel,'An error occured while trying to find that user. ' . $url);
+	} else {
+		$gold = '';
+		if ($json['data']['is_gold']) { $gold = ' They are a ' . fx('BOLD','reddit gold') . ' member.'; }
+		send_msg($channel,fx('BOLD',$json['data']['name']) . ' has ' . fx('BOLD',number_format($json['data']['link_karma'])) . ' link karma and ' . fx('BOLD',number_format($json['data']['comment_karma'])) . ' comment karma.' . $gold);
+	}
 }
 function internets_expand() {
 	global $args,$channel;
@@ -113,7 +130,7 @@ function internets_urban() {
 }
 function internets_ipinfo() {
 	global $args,$channel;
-	if (!filter_var($args[0],FILTER_VALIDATE_IP)&&!filter_var(gethostbyname($args[0]),FILTER_VALIDATE_IP)) {
+	if (!filter_var($args[0],FILTER_VALIDATE_IP)) {
 		send_msg($channel,'Usage: ipinfo 192.168.200.1. Be sure that you are supplying a valid IP address.');
 	} else {
 		$host = gethostbyaddr($args[0]);
