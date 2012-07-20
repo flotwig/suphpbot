@@ -95,8 +95,9 @@ function send($raw) { // send raw data through the socket
 	fwrite($socket,"{$raw}\n\r");
 	shell_send($raw,'OUT');
 }
-function send_msg($target,$message) { // format data all pretty-like and send it out
+function send_msg($target,$message,$type=0) { // format data all pretty-like and send it out
 	global $nick,$settings;
+	$types = array('PRIVMSG','NOTICE'); // not everything needa be sent to the channel
 	// Let's chunk up the message so it all gets sent.
 	$message = str_split($message,intval($settings['maxlen']));
 	if (count($message)>intval($settings['maxsend'])) {
@@ -111,7 +112,7 @@ function send_msg($target,$message) { // format data all pretty-like and send it
 			$msg = str_replace($badwords,$settings['censor_word'],$msg);
 		}
 		$msg = str_replace(array('%nick%','%message%'),array(fx('BOLD',$nick),xtrim($msg)),$settings['message_style']);
-		send('PRIVMSG ' . $target . ' :' . $msg);
+		send($types[$type] . ' ' . $target . ' :' . $msg);
 	}
 }
 /*
