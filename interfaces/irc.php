@@ -115,6 +115,10 @@ function send_msg($target,$message,$type=0) { // format data all pretty-like and
 		send($types[$type] . ' ' . $target . ' :' . $msg);
 	}
 }
+function noperms() { // we gonna use this to notify people trying to do things they shouldn't be doing
+	global $nick;
+	send_msg($nick,'Sorry, you don\'t have the appropriate permissions for that.',1);
+}
 /*
 	WRAP CONSTANTS FOR FX()
 */
