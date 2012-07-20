@@ -20,7 +20,7 @@ if (count(getopt(NULL,array('running')))<1) {
 	die();
 }
 shell_send('Script started.');
-define('IRC_VERSION','suphpbot version 0.3b - https://github.com/flotwig/suphpbot');
+define('IRC_VERSION','suphpbot version 0.4b - https://github.com/flotwig/suphpbot');
 // let's load up our interface
 $interface = $settings['interface'];
 if (empty($interface)) {
