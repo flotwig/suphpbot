@@ -83,7 +83,7 @@ function core_reload() {
 		load_settings();
 		send_msg($nick,'Settings reloaded.',1);
 	} else {
-		send_msg($channel,'You are merely a normal user. You shall not reload settings!');
+		noperms();
 	}
 }
 function core_ping() {
@@ -99,7 +99,7 @@ function core_echo() {
 	if ($admin) {
 		send_msg($channel,'' . $arguments);
 	} else {
-		send_msg($channel,'You don\'t have the permissions required to execute this command.');
+		noperms();
 	}
 }
 function core_module_unload() {
@@ -115,7 +115,7 @@ function core_module_unload() {
 			return false;
 		}
 	} else {
-		send_msg($channel,'You need to be identified as an administrator to unload plugins.');
+		noperms();
 		return false;
 	}
 }
@@ -132,7 +132,7 @@ function core_module_load() {
 			return false;
 		}
 	} else {
-		send_msg($channel,'You need to be identified as an administrator to load plugins.');
+		noperms();
 		return false;
 	}
 }
@@ -158,7 +158,7 @@ function core_quit() {
 		shell_send('Bot killed by administrator - see above for details.');
 		die();
 	} else {
-		send_msg($channel,'If you really want to quit so bad, maybe you should identify as an admin first!');
+		noperms();
 	}
 }
 function core_raw() {
@@ -166,7 +166,7 @@ function core_raw() {
 	if ($admin) {
 		send($arguments);
 	} else {
-		send_msg($channel,'Nice try.');
+		noperms();
 	}
 }
 function core_config() {
@@ -184,7 +184,7 @@ function core_config() {
 		}
 	} else {
 		if (!$admin) {
-			send_msg($channel,'Sorry, but you need to be an admin to use that command.');
+			noperms();
 		} else {
 			$key = $buffwords[4];
 			$value = implode(' ',array_slice($buffwords,5));
@@ -198,13 +198,13 @@ function core_eval() {
 	if ($admin) {
 		eval($arguments);
 	} else {
-		send_msg($channel,'Boy, whatchu tryin\' to do?');
+		noperms();
 	}
 }
 function core_restart() {
 	global $admin,$settings,$channel,$socket;
 	if (!$admin) {
-		send_msg($channel,'Be an admin, then we\'ll talk.');
+		noperms();
 	} else {
 		send('QUIT ' . $settings['quitmsg']);
 		shell_send('Attempting to restart the bot...');
