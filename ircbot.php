@@ -7,6 +7,7 @@
 if (PHP_SAPI !== 'cli') { die('This script can\'t be run from a web browser.'); }
 define('START_TIME',time()); // so we can have core::uptime
 set_time_limit(0); // so your bot doesn't die after 30 seconds
+date_default_timezone_set(date_default_timezone_get()); // because PHP can be a bitch sometimes
 ini_set('error_reporting',E_ALL-E_NOTICE);
 if (count(getopt('c:'))>0) {
 	$config = getopt('c:');
