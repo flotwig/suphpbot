@@ -36,7 +36,7 @@ $help_map['core'] = array(
 	'restart'=>'Start another instance of the bot and kill this one.',
 );
 function core_help() {
-	global $channel, $args, $help, $commands, $settings;
+	global $channel, $args, $help, $commands, $settings, $nick;
 	if ($args[0]!=='') {
 		if (isset($help[$args[0]])) {
 			$response = 'Help for ' . strtolower($args[0]) . ': ' . $help[$args[0]];
@@ -48,10 +48,10 @@ function core_help() {
 	} else {
 		$response = 'Usage: ' . $settings['commandchar'] . 'help ' . fx('BOLD','command') . ' - Use "help list" if you\'re just getting started with the bot.';
 	}
-	send_msg($channel,$response);
+	send_msg($nick,$response,1);
 }
 function core_uptime() {
-	global $channel;
+	global $channel,$nick;
 	$uptime = time()-START_TIME;
 	$response = 'Bot uptime is: ' . floor($uptime/60/60/24) . ' days, ' . ($uptime/60/60%24) . ' hours, ' . ($uptime/60%60) . ' minutes, and ' . ($uptime%60) . ' seconds. ';
 	$uptime = @file_get_contents('/proc/uptime');
@@ -63,7 +63,7 @@ function core_uptime() {
 	send_msg($channel,$response);
 }
 function core_about() {
-	global $channel,$arguments,$settings;
+	global $channel,$arguments,$settings,$nick;
 	$abouts = array(
 		'author'=>'suphpbot is coded by flotwig at http://za.chary.us/',
 		'credits'=>'Thanks to the bot-obsessed folks at irc.x10hosting.com, I stole a lot of ideas from them. GtoXic, Dead-i, Sierra and stpvoice are just a few of the people who helped out a lot. Also, thanks to Sharky for not k-lining me :D',
@@ -72,27 +72,27 @@ function core_about() {
 		'version'=>IRC_VERSION
 	);
 	if (isset($abouts[$arguments])) {
-		send_msg($channel,$abouts[$arguments]);
+		send_msg($nick,$abouts[$arguments],1);
 	} else {
-		send_msg($channel,'What would you like to know more about? ' . $settings['commandchar'] . 'about ' . implode(', ' . $settings['commandchar'] . 'about ', array_keys($abouts)));
+		send_msg($nick,'What would you like to know more about? ' . $settings['commandchar'] . 'about ' . implode(', ' . $settings['commandchar'] . 'about ', array_keys($abouts)),1);
 	}
 }
 function core_reload() {
-	global $admin,$channel;
+	global $admin,$channel,$nick;
 	if ($admin) {
 		load_settings();
-		send_msg($channel,'Settings reloaded.');
+		send_msg($nick,'Settings reloaded.',1);
 	} else {
 		send_msg($channel,'You are merely a normal user. You shall not reload settings!');
 	}
 }
 function core_ping() {
-	global $channel;
-	send_msg($channel,'pong');
+	global $nick;
+	send_msg($nick,'pong',1);
 }
 function core_whoami() {
 	global $channel,$nick,$buffwords,$admin;
-	send_msg($channel,'You are ' . $nick . ' (' . substr($buffwords[0],1) . '), and you are level ' . (int)$admin);
+	send_msg($nick,'You are ' . $nick . ' (' . substr($buffwords[0],1) . '), and you are level ' . (int)$admin,1);
 }
 function core_echo() {
 	global $admin,$buffwords,$channel,$arguments;
@@ -140,14 +140,14 @@ function core_command_list() {
 	global $commands,$channel,$nick,$function_map,$arguments,$loaded_modules;
 	if (!is_array($function_map[$arguments])) {
 		$ocomm = implode(', ',$loaded_modules);
-		send_msg($channel,'Modules loaded: ' . $ocomm);
+		send_msg($nick,'Modules loaded: ' . $ocomm,1);
 	} else {
 		foreach ($function_map[$arguments] as $command => $function) {
 			$ocomm[] = $command;
 		}
 		sort($ocomm);
 		$ocomm = implode(', ',$ocomm);
-		send_msg($channel,'Commands in ' . $arguments . ': ' . $ocomm);
+		send_msg($nick,'Commands in ' . $arguments . ': ' . $ocomm,1);
 	}
 }
 function core_quit() {
