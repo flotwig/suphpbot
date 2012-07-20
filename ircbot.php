@@ -76,12 +76,12 @@ while (1) {
 							// do nothing - we're ignoring them :p
 						} else {
 							if (in_array($command,$blocked)) {
-								send_msg($channel,$command . ' is a blocked command. Contact a bot administrator for guidance.');
+								send_msg($nick,$command . ' is a blocked command. Contact a bot administrator for guidance.',1);
 							} elseif (function_exists($commands[$command])) {
 								call_hook('command_' . $command);
 								call_user_func($commands[$command]);
 							} else {
-								send_msg($channel,$command . ' is not a valid command. Maybe you need to load a plugin?');
+								send_msg($nick,$command . ' is not a valid command. Maybe you need to load a plugin?',1);
 							}
 						}
 					} else {
@@ -95,7 +95,7 @@ while (1) {
 							$ignore[] = $hostmask;
 							$settings['ignore'] = implode(',',$ignore);
 							save_settings($settings,$config);
-							send_msg($channel,'Hi, you\'ve been added to my ignore list for flooding! Congratulations! Contact a bot administrator for guidance.');
+							send_msg($nick,'Hi, you\'ve been added to my ignore list for flooding! Congratulations! Contact a bot administrator for guidance.',1);
 							$strikes[$hostmask]=0;
 						}
 					}
