@@ -147,8 +147,10 @@ function load_settings() {
 function call_hook($hook) {
 	global $hooks;
 	$hook = $hooks[$hook];
-	foreach ($hook as $hookah) {
-		call_user_func($hookah);
+	if (is_array($hook)) {
+		foreach ($hook as $hookah) {
+			call_user_func($hookah);
+		}
 	}
 }
 function shell_send($message,$type='NOTE') {
