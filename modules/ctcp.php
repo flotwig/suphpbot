@@ -30,6 +30,7 @@ function ctcp_hook_data_in() {
 		} elseif ($command=='CLIENTINFO') {
 			send_ctcp($channel,$command . ' I know these CTCP commands: PING TIME ERRMSG SOURCE CLIENTINFO VERSION FINGER USERINFO');
 		}
+	}
 }
 function send_ctcp($target,$command) { // WE SEND CTCP USING THIS FUNCTION, BELIEVE IT OR NOT :O
 	call_hook('ctcp_out');
