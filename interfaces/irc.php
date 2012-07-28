@@ -25,7 +25,7 @@ function interface_retrieve_buffer() { // $buffer = fgets($socket);
 	$buffer = fgets($socket);
 }
 function interface_loop_extraction() { // function to extract data from the current global, $buffer into a bunch of vars
-	global $buffer,$admin,$buffwords,$nick,$channel,$in_convo,$hostname,$bw,$arguments,$args,$ignore,$settings,$hostmask;
+	global $bnick,$buffer,$admin,$buffwords,$nick,$channel,$in_convo,$hostname,$bw,$arguments,$args,$ignore,$settings,$hostmask;
 	$buffer = str_replace(array("\n","\r"),'',$buffer);
 	$buffer = xtrim($buffer); // get rid of doubles
 	$admin = FALSE;
