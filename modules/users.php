@@ -36,7 +36,7 @@ function users_identify() {
 	$userarray = users_functions_load();
 	if (!$in_convo) {
 		send_msg($channel,'This command must be sent via /msg.');
-	} else if (is_array($usersessions[$hostname])) {
+	} elseif (is_array($usersessions[$hostname])) {
 		send_msg($channel,'You\'re already logged in.');
 	} else {
 		foreach ($userarray as $userline) {
@@ -61,9 +61,9 @@ function users_register() {
 	$userarray = users_functions_load();
 	if (!$in_convo) {
 		send_msg($channel,'This command must be sent via /msg.');
-	} else if (is_array($usersessions[$hostname])) {
+	} elseif (is_array($usersessions[$hostname])) {
 		send_msg($channel,'You\'re already logged in.');
-	} else if (count($args)!==2) {
+	} elseif (count($args)!==2) {
 		send_msg($channel,'Command usage: register USERNAME PASSWORD');
 	} else {
 		foreach ($userarray as $userline) {
