@@ -107,7 +107,10 @@ function now_playing() {
 	global $args,$channel,$nick;
 	$user = get_lastfm_user($nick);
 	if ($args[0]) { // if user specified user
-		$user = $args[0];
+		$user = get_lastfm_user($args[0]);
+		if (!$user) {
+			$user = $args[0];
+		}
 	} 
 	if (!$user) { // if user is set and no specified nick
 		return nothing_met($channel);
@@ -136,8 +139,8 @@ function now_playing() {
 			if ($trackinfo['track']['userloved']) {
 				$str .= ' - ♥';
 			}
+			$str .= ']';
 		}
-		$str .= ']';
 		if ($toptags) { // Check if artist has toptags
 			$str .= ' (' . $toptags . ')';	
 		}
@@ -146,8 +149,8 @@ function now_playing() {
 			$str .= ' (' . internets_shorten_url($firstTrack['url']) . ')';
 		}	
 	} else {
-		if ($firsttrack) {
-			// if user existsnow playing isn't true, get last track played and time.
+		if ($data['recenttracks']['track']) {
+			// if user exists now playing isn't true, get last track played and time.
 			$str = ' "' . $user . '" is not listening to anything right now.  Last played track is ';
 			$str .= $data['recenttracks']['track']['artist']['#text'];
 			$str .= ' - ' . $data['recenttracks']['track']['name'];
@@ -163,7 +166,10 @@ function top_artists() {
 	global $args,$channel,$nick;
 	$user = get_lastfm_user($nick);
 	if ($args[0]) { // if user specified user
-		$user = $args[0];
+		$user = get_lastfm_user($args[0]);
+		if (!$user) {
+			$user = $args[0];
+		}
 	} 
 	if (!$user) { // if user is set and no specified nick
 		return nothing_met($channel);
