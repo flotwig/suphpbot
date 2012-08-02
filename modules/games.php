@@ -5,12 +5,14 @@ $function_map['games'] = array(
 	'roulette'=>'games_roulette',
 	'barkeep'=>'games_barkeep',
 	'eightball'=>'games_eightball',
+	'noodles'=>'games_noodles',
 );
 $help_map['games'] = array(
 	'coin'=>'For those of you who can\'t make your own decisions, "coin" can be used to... flip a coin. Am I really having to explain this to you?',
 	'roulette'=>'Simulate the gentlemanly game of Russian Roulette with a six-shot virtual revolver.',
 	'barkeep'=>'Our very own interactive AI barkeep. "barkeep [drink]" to request a drink, "barkeep [drink] [flavor]" to get something special, and just "barkeep" to view our selection.',
 	'eightball'=>'"eightball [question]" - All the answers you seek.',
+	'noodles'=>'Our very own interactive noodle bar.',
 );
 $trap = rand(0,5);
 $tries = 0;
@@ -46,6 +48,19 @@ function games_barkeep() {
 		$message = 'Our selection: ' . implode(', ',array_keys($drank));
 	}
 	send_msg($channel,'Barkeep: ' . $message);
+}
+function games_noodles() {
+	global $channel,$args;
+	$drank = array('ramen'=>'a rectangle of %s ramen noodles','spaghetti'=>'a pipin\' hot dish of our %s spaghetti!','instant'=>'a styrofoam cup of %s instant noodles. they\'re really quick!','fried'=>'a bowl of %s fried noodles. fun!','lasagna'=>'a dishful of %s lasagna... i mean, i wouldn\'t eat it, but hey.','chicken'=>'a %s bowl of chicken noodle soup!');
+	ksort($drank);
+	if (isset($drank[$args[0]])&&!empty($args[1])) {
+		$message = 'Just for you, here\'s ' . sprintf($drank[$args[0]],substr($args[1],0,15));
+	} elseif (isset($drank[$args[0]])) {
+		$message = 'Have ' . sprintf($drank[$args[0]],'');
+	} else {
+		$message = 'Our selection: ' . implode(', ',array_keys($drank));
+	}
+	send_msg($channel,'Noodle bar: ' . $message);
 }
 function games_eightball() {
 	global $channel;
