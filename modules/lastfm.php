@@ -10,6 +10,7 @@ $function_map['lastfm'] = array(
 	'band'=>'artist_info',
 	'compare'=>'compare_users',
 	'plays'=>'plays',
+	'whois'=>'whois',
 );
 $help_map['lastfm'] = array(
 	'setuser'=>'Set your last.fm username.',
@@ -19,6 +20,7 @@ $help_map['lastfm'] = array(
 	'band'=>'Returns some basic information about specified band.',
 	'compare'=>'Compares register user with specified user, or two separate users.',
 	'plays'=>'Displays user plays by given band, you can also view plays of given band by users other than yourself. I.E. plays username band.',
+	'whois'=>'Returns users associated with Last.fm username, or any given nick.',
 );
 function nothing_met($channel) {
 	$str = 'Either nick isn\'t associated or you need to specify arguments.';
@@ -66,14 +68,16 @@ function del_lastfm_user() {
 }
 // This will return the user if an entry exists
 function get_lastfm_user($nick) {
+	global $channel;
 	$file = './data/lastfm_data.json';
 	$fc = file_get_contents($file);
 	$users = json_decode($fc, true);
-	if ($users['users'][$nick]) {
-		return $users['users'][$nick]['lastfmuser'];
-	} else {
-		return 0;
+	foreach ($users['users'] as $key => $lastfm) { 
+		if (preg_match('/' .$nick . '/i', $key)) { // Nicks can be case insensitive.
+			return $lastfm['lastfmuser'];
+		} 
 	}
+	return;
 }
 // This grabs the json from the last.fm api with given params
 function get_lastfm_data($method,$paramstr) {
@@ -88,15 +92,15 @@ function get_lastfm_data($method,$paramstr) {
 function get_top_tags($artist) {
 	$def = get_lastfm_data('artist.gettoptags','mbid=' . $artist);
 	$tagamount = 0;
+	$tags = array();
 	if ($def['toptags']) { // Check if artist has top tags
 		foreach ($def['toptags']['tag'] as $tag) {
 			if ($tagamount++ == 5) {
 				break;
 			}
-			$tags .= $tag['name'] . ', ';
+			array_push($tags,$tag['name']);
 		}
-		// strip that last comma
-		$tags = substr($tags, 0, -2);
+		$tags = join(', ',$tags);
 		return $tags;
 	} else {
 		return 0; // return false if no top tags
@@ -124,13 +128,16 @@ function now_playing() {
 		$toptags = get_top_tags($firstTrack['artist']['mbid']);
 		$str =  ' "' . $user . '" is now playing '.$firstTrack['artist']['#text'];
 		$str .= ' - ' . $firstTrack['name'];
-		if ($firsttrack['album']['#text'])  { // check if album exists
-			$str .= ' on ' . $firstTrack['album']['#text'];
+		if ($firstTrack['album']['#text'])  { // check if album exists
+			$str .= ' - ' . $firstTrack['album']['#text'];
 		}
 		if ($trackinfo['track']['duration']) { // check if duration exists
 				$totalSeconds = $trackinfo['track']['duration'] / 1000; // duration contains 3 trailing 0's
 				$minutes = floor($totalSeconds / 60); // minutes
 				$seconds = $totalSeconds - ($minutes * 60); //  seconds
+				if ($seconds < 10) { // Don't know if there is a better way to do this...
+					$seconds = '0' . $seconds;
+				}
 				$str .= ' [' . $minutes . ':' . $seconds . ']';
 		}  
 		if ($trackinfo['track']['userplaycount']) { // check if userplaycount exists
@@ -176,16 +183,11 @@ function top_artists() {
 	} 
 	$data = get_lastfm_data('user.gettopartists','limit=8&period=7day&user=' . urlencode($user));
 	if ($data['topartists']['artist'][0]['name']) {
-		$artistcount = count($data['topartists']['artist']) -1;
-		$str = ' top artists for ' . $user . ' (';
-		for ($i = 0; $i <= $artistcount; $i++) {
-			if ($i == $artistcount) {
-				$str .= $data['topartists']['artist'][$i]['name'];		
-			} else {
-				$str .= $data['topartists']['artist'][$i]['name'] . ', ';
-			}
+		$artistarray = array();
+		foreach ($data['topartists']['artist'] as $artist) {
+			array_push($artistarray, $artist['name']);
 		}
-		$str .= ')';
+		$str .= ' top artists for "' . $user . '" (' . join(', ',$artistarray) . ')';
 	} else {
 		$str = 'Specified user has no recent top artists.';
 	}
@@ -195,20 +197,18 @@ function top_artists() {
 function artist_info() {
 	global $arguments,$channel;
 	if (!$arguments) {
-		$str = 'Please specify an artist';
+		$str = 'Please specify an artist.';
 	} else {
 		$data = get_lastfm_data('artist.getinfo','limit=1&autocorrect=1&artist=' . urlencode($arguments));
 		if ($data['artist']['name']) { // Check if artist exists
 			$str = $data['artist']['name'] . ' have ' . number_format($data['artist']['stats']['playcount']) . ' plays and ';
 			$str .= number_format($data['artist']['stats']['listeners']) . ' listeners.';
 			if ($data['artist']['similar']) { // Check if similar artists exist
-				$str .= ' Similar artists include: (';
+				$artistarray = array();
 				foreach ($data['artist']['similar']['artist'] as $similar) {
-					$str .= $similar['name'] . ', ';
+					array_push($artistarray, $similar['name']);
 				}
-				// strip that last comma
-				$str = substr($str, 0, -2);
-				$str .= ')';
+				$str .= ' Similar artists include: (' . join(', ',$artistarray) . ')';
 			}
 			$toptags = get_top_tags($data['artist']['mbid']);
 			if ($toptags) { // Check if artist has toptags
@@ -245,19 +245,17 @@ function compare_users() {
 		return nothing_met($channel);
 	} 
 	$data = get_lastfm_data('tasteometer.compare','type1=user&type2=user&value1=' . urlencode($user) . '&value2=' . urlencode($user2));
-	if ($data['comparison']) { // Make sure there are artists.
+	if ($data['comparison']['result']['score'] > 0) { // Make sure there are artists and there is at least something to compare
 		$str = '"' . $user . '" vs "' . $user2 . '": ' . round($data['comparison']['result']['score']*100, 1) . '% - ';
 		if ($data['comparison']['result']['artists']) { // Check if common artists exist
-			$str .= ' Common artists include: (';
+			$resultarray = array();
 			foreach ($data['comparison']['result']['artists']['artist'] as $common) {
-				$str .= $common['name'] . ', ';
+				array_push($resultarray, $common['name']);
 			}
-			// strip that last comma
-			$str = substr($str, 0, -2);
-			$str .= ')';
+			$str .= ' Common artists include: (' . join(', ',$resultarray) . ')';
 		}
 	} else {
-		$str = 'Error comparing ' . $user . ' to ' . $user2 . '.';
+		$str = 'There are no common artists between ' . $user . ' and ' . $user2 . '.';
 	}
 	send_msg($channel,$str);
 }
@@ -282,4 +280,33 @@ function plays() {
 		$str = 'Last.fm has no record of ' . $artist;
 	}
 	send_msg($channel,$str);
+}
+function whois() {
+	global $args,$channel,$nick;
+	if (!$args[0]) {
+		$str = "Please provide a Last.fm username.";
+	} else {
+		$user = get_lastfm_user($args[0]);
+		if (!$user) {
+			$user = $args[0];
+		}
+		$file = './data/lastfm_data.json';
+		$fc = file_get_contents($file);
+		$users = json_decode($fc, true);
+		$userarray = array();
+		// I feel like this bit is pretty self explanatory
+		foreach ($users['users'] as $key => $lastfm) {
+			if ($lastfm['lastfmuser'] == $user) {
+				array_push($userarray,$key);
+			}
+		}
+		if ($userarray) { // if there are other users
+			$str = ' "' . $user . '" is associated with: (';
+			$str .= join(', ',$userarray);
+			$str .= ')';
+		} else {
+			$str = 'Could not find any association for: ' . $user;
+		}
+		send_msg($channel,$str);
+	}
 }
