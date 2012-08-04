@@ -103,9 +103,10 @@ function core_echo() {
 	}
 }
 function core_module_unload() {
-	global $admin,$buffwords,$commands,$nick,$function_map,$channel,$hook_map,$hooks,$help_map,$help,$loaded_modules;
+	global $admin,$args,$buffwords,$commands,$nick,$function_map,$channel,$hook_map,$hooks,$help_map,$help,$loaded_modules;
 	if ($admin) {
 		$module = end(explode('/',$buffwords[4]));
+		if($module == "core"&&$args[1] != "force") {send_msg($channel, 'You shouldn\'t unload the core module, it contains very important commands. If you want to do this anyway, type force after the command.');return false;}
 		if (is_array($function_map[$module])) {
 			unload_module($module);
 			send_msg($channel,'Module unloaded successfully!');
