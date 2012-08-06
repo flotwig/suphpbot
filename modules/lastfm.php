@@ -11,6 +11,7 @@ $function_map['lastfm'] = array(
 	'compare'=>'compare_users',
 	'plays'=>'plays',
 	'whois'=>'whois',
+	'genre'=>'genre',
 );
 $help_map['lastfm'] = array(
 	'setuser'=>'Set your last.fm username.',
@@ -21,6 +22,7 @@ $help_map['lastfm'] = array(
 	'compare'=>'Compares register user with specified user, or two separate users.',
 	'plays'=>'Displays user plays by given band, you can also view plays of given band by users other than yourself. I.E. plays username band.',
 	'whois'=>'Returns users associated with Last.fm username, or any given nick.',
+	'genre'=>'Returns brief description and similar genres and tags of given genre or tag.',
 );
 function nothing_met($channel) {
 	$str = 'Either nick isn\'t associated or you need to specify arguments.';
@@ -90,7 +92,7 @@ function get_lastfm_data($method,$paramstr) {
 // I wanted a second function for this since i'll be using it often
 // Eventually I'll write this to the cache file
 function get_top_tags($artist) {
-	$def = get_lastfm_data('artist.gettoptags','mbid=' . $artist);
+	$def = get_lastfm_data('artist.gettoptags','mbid=' . urlencode($artist));
 	$tagamount = 0;
 	$tags = array();
 	if ($def['toptags']) { // Check if artist has top tags
@@ -307,6 +309,51 @@ function whois() {
 		} else {
 			$str = 'Could not find any association for: ' . $user;
 		}
-		send_msg($channel,$str);
 	}
+	send_msg($channel,$str);
 }
+function genre() {
+	global $arguments,$channel;
+	$similar = get_lastfm_data('tag.getsimilar','tag=' . urlencode($arguments));
+	$taginfo = get_lastfm_data('tag.getinfo','tag=' . urlencode($arguments));
+	$tagartists = get_lastfm_data('tag.gettopartists','tag=' . urlencode($arguments));
+	if (!$arguments) {
+		$str = 'Please include a genre or tag name.';
+	}
+	if ($taginfo['tag']['name']) { // Grab tagname... 
+		$str = '"' . $taginfo['tag']['name'] . '" - ';
+	}
+	if (is_array($taginfo['tag']['wiki'])) { // Check if tag description exists.
+		$str .= html_entity_decode(substr($taginfo['tag']['wiki']['summary'], 0, 200)) . '...';
+	}
+	if ($similar['similartags']['tag'] && !$similar['similartags']['#text']) { // Check if there are similar tags.
+		$tagamount = 0;
+		$tags = array();
+		foreach ($similar['similartags']['tag'] as $tag) {
+			if ($tagamount++ == 5) {
+				break;
+			}
+			array_push($tags,$tag['name']);
+		}
+		$str .= ' Similar tags: (' . join(', ',$tags) . ')';
+	}
+	if ($tagartists['topartists']['artist']) { // Check if there are similar artists.
+		$artistnum = 0;
+		$topartists = array();
+		foreach ($tagartists['topartists']['artist'] as $artist) {
+			if ($artistnum++ == 5) {
+				break;
+			}
+			array_push($topartists,$artist['name']);
+		}
+		$str .= ' Top artists: (' . join(', ',$topartists) . ')';
+	}
+	if ($taginfo['tag']['url']) { // Make sure URL exists.
+		$str .= ' (' . internets_shorten_url($taginfo['tag']['url']) . ')';
+	}
+	if ($taginfo['error'])	{
+		$str = '"' . $arguments . '" Either doesn\'t exist or no description available.';
+	}
+	send_msg($channel,$str);
+}
+	
