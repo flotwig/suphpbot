@@ -164,7 +164,7 @@ function internets_weather() {
 		$w = json_decode(internets_get_contents('http://api.wunderground.com/api/' . WUNDERGROUND_APIKEY . '/conditions/q/' . urlencode($arguments) . '.json'),TRUE);
 		
 		if(empty($w['current_observation']['display_location']['full'])) {
-			send_msg($channel,'invaild location');
+			send_msg($channel,'invalid location');
 		} else {
 			$response = array(
 				$w['current_observation']['display_location']['full'],
