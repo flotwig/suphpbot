@@ -175,8 +175,7 @@ function load_module($modname) {
 }
 function unload_module($modname) {
 	global $commands,$function_map,$hook_map,$help_map,$loaded_modules,$hooks,$help;
-	$commands = array_diff($commands,$function_map[$modname]);
-	unset($function_map[$modname]);
+	$function_map = array_diff($function_map,array($modname));
 	if (is_array($hook_map[$modname])) {
 		foreach ($hook_map[$modname] as $hook_name => $hook_function) {
 			$hooks[$hook_name] = array_diff($hooks[$hook_name],array($hook_function));
@@ -185,7 +184,7 @@ function unload_module($modname) {
 	if (is_array($help_map[$modname])) {
 		$help = array_diff($help,$help_map[$modname]);
 	}
-	$loaded_modules = array_diff(array($modname),$loaded_modules);
+	$loaded_modules = array_diff($loaded_modules,array($modname));
 }
 function fx($filter,$text,$ignorecc=FALSE) {
 	global $settings;
