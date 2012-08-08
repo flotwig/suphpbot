@@ -12,12 +12,14 @@ $scriptname = str_replace(".php","",basename(__FILE__));
 
 $function_map[$scriptname] = array(
     'police' => 'silly_five_O',
-    'hello' => 'silly_hello'
+    'hello' => 'silly_hello',
+    'false' => 'user_false'
 );
 
 $help_map[$scriptname] = array (
     'police' => 'Prints an ASCII of a police car, also can be called by dialing 911',
-    'hello' => 'Prints Hello world'
+    'hello' => 'Prints Hello world',
+	'false' => 'Checks if a user is false.'
 );
 
 $hook_map[$scriptname] = array (
@@ -69,4 +71,37 @@ function silly_sniffer () {
          silly_five_O();
     }
 }
+
+// Checks if user is false
+
+function user_false() {
+	global $args,$channel,$nick;
+	$artist = 'Judas Prist';
+	$plays = 666; // if less than this, user false. 
+	$user = get_lastfm_user($nick);
+	if ($args[0]) { // if user specified user
+		$user = get_lastfm_user($args[0]);
+		if (!$user) {
+			$user = $args[0];
+		}
+	} 
+	if (!$user) { // if user is set and no specified nick
+		return nothing_met($channel);
+	} 
+	$data = get_lastfm_data('artist.getinfo','limit=1&username=' . urlencode($user) . '&artist=' . urlencode($artist));
+	if ($data['artist']['stats']['userplaycount']) {
+		if ($data['artist']['stats']['userplaycount'] < $plays) {
+			$str = '"' . $user . '" only has ' . $data['artist']['stats']['userplaycount'];
+			$str .= $data['artist']['name'] . ' plays.  "' . $user . '" is false. ';
+			$str .= $plays - $data['artist']['stats']['userplaycount'] . ' more plays required to be trve.';
+		} else {
+			$str = '"' . $user . '"  has ' . $data['artist']['stats']['userplaycount'];
+			$str .= $data['artist']['name'] . ' plays.  "' . $user . '" is trve.';
+		}
+	} else {
+		$str = '"' . $user . '" has never listened to ' . $artist . '. "' . $user . '" should leave the hall.';
+	}
+	send_msg($channel,$str);
+}
+
 ?>

@@ -159,19 +159,17 @@ function shell_send($message,$type='NOTE') {
 function load_module($modname) {
 	global $commands, $function_map, $hook_map, $hooks;
 	global $help, $help_map, $loaded_modules;
-	if ($function_map[$modname]) { return 0; } else {// Make sure it doesn't already exist...
-		$load = @include_once('./modules/' . trim($modname) . '.php');
-		if ($load) {
-			$commands = array_merge($commands,$function_map[trim($modname)]);
-			if (isset($hook_map[trim($modname)])) {
-				foreach ($hook_map[trim($modname)] as $hook_id => $hook_function) {
-					$hooks[$hook_id][] = $hook_function;
-				}
+	$load = @include_once('./modules/' . trim($modname) . '.php');
+	if ($load) {
+		$commands = array_merge($commands,$function_map[trim($modname)]);
+		if (isset($hook_map[trim($modname)])) {
+			foreach ($hook_map[trim($modname)] as $hook_id => $hook_function) {
+				$hooks[$hook_id][] = $hook_function;
 			}
-			$loaded_modules[] = $modname;
-			if (is_array($help_map[trim($modname)])) {
-				$help = array_merge($help,$help_map[trim($modname)]);
-			}
+		}
+		$loaded_modules[] = $modname;
+		if (is_array($help_map[trim($modname)])) {
+			$help = array_merge($help,$help_map[trim($modname)]);
 		}
 	}
 }
