@@ -51,15 +51,18 @@ $help_map['internets'] = array(
 	'whatpulse'=>$help_map['internets']['pulse'],
 	'karma'=>'Retrieves karma stats and other info about a redditor.',
 );
+
+$hook_map['internets'] = array(
+	'data_in'=>'internets_hook_snarf'
+);
+
 function internets_bing_search($string) {
 	$url = 'http://api.bing.net/json.aspx?AppId=' . BING_APPID;
 	$url .= '&Query=' . urlencode($string);
 	$url .= '&Sources=Web';
 	return json_decode(internets_get_contents($url),TRUE);
 }
-$hook_map['internets'] = array(
-	'data_in'=>'internets_hook_snarf'
-);
+
 function internets_get_contents($url,$post=NULL) {
 	$ch = curl_init();
 	curl_setopt_array($ch,array(
