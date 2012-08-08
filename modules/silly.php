@@ -12,12 +12,14 @@ $scriptname = str_replace(".php","",basename(__FILE__));
 
 $function_map[$scriptname] = array(
     'police' => 'silly_five_O',
-    'hello' => 'silly_hello'
+	'911' => 'silly_five_O',
+    'hello' => 'silly_hello',
 );
 
 $help_map[$scriptname] = array (
     'police' => 'Prints an ASCII of a police car, also can be called by dialing 911',
-    'hello' => 'Prints Hello world'
+    'hello' => 'Prints Hello world',
+	'911' => $help_map['silly']['police'],
 );
 
 $hook_map[$scriptname] = array (
@@ -33,22 +35,28 @@ function silly_hello () {
 }
 
 function silly_five_O () {
-    global $channel;
+    global $channel,$nick;
+	$allowed = array('BrutalN00dle','kwamaking','Skuld','StompinBroknGlas','Shamed','Mike','thegauntlet','nakedcups','Fenriz','BrutalMobile');
+	if (in_array($nick,$allowed)) {
+		// Drawing the car using ACSII
 
-    // Drawing the car using ACSII
- 
-    $line1 = "..........__\_@@\@__";
-    $line2 = "..... ___//___?____\\________";
-    $line3 = "...../--o-METAL-POLICE------@}";
-    $line4 = "....`=={@}=====+===={@}--- ' WHAT SEEMS TO BE THE PROBLEM HERE?";
+		$line1 = "..........__\_@@\@__";
+		$line2 = "..... ___//___?____\\________";
+		$line3 = "...../--o-METAL-POLICE------@}";
+		$line4 = "....`=={@}=====+===={@}--- ' WHAT SEEMS TO BE THE PROBLEM HERE?";
 
 
-    //using raw send to avoid adding "nick:" infront of the message.
+		//using raw send to avoid adding "nick:" infront of the message.
 
-    send('PRIVMSG ' . $channel . ' :' . $line1);
-    send('PRIVMSG ' . $channel . ' :' . $line2);
-    send('PRIVMSG ' . $channel . ' :' . $line3);
-    send('PRIVMSG ' . $channel . ' :' . $line4);
+		send('PRIVMSG ' . $channel . ' :' . $line1);
+		send('PRIVMSG ' . $channel . ' :' . $line2);
+		send('PRIVMSG ' . $channel . ' :' . $line3);
+		send('PRIVMSG ' . $channel . ' :' . $line4);
+	}
+	else {
+		$line1 = "Calling the police on false pretenses is a crime...";
+		send('PRIVMSG ' . $channel . ' :' . $line1);
+	}
 
 }
 
@@ -58,9 +66,7 @@ function silly_five_O () {
 function silly_sniffer () {
 
     global $buffwords;
-
     $sniffed_command = strtolower(substr($buffwords[3],1));
-
     if ($sniffed_command == '911') {
          silly_five_O();
     }
