@@ -163,8 +163,8 @@ function internets_weather() {
 	} else {
 		$w = json_decode(internets_get_contents('http://api.wunderground.com/api/' . WUNDERGROUND_APIKEY . '/conditions/q/' . urlencode($arguments) . '.json'),TRUE);
 		
-		if(empty($w['current_observation']['display_location']['full'])) {
-			send_msg($channel,'invalid location');
+		if (isset($w['response']['error'])) {
+			send_msg($channel,"Error: ".$w['response']['error']['description']);
 		} else {
 			$response = array(
 				$w['current_observation']['display_location']['full'],
@@ -179,7 +179,7 @@ function internets_weather() {
 				'Precipitation today: ' . $w['current_observation']['precip_today_string'],
 			);
 
-			send_msg($channel,implode(' :: ',$response));
+			send_msg($channel,implode(', ',$response));
 		}
 	}
 }
@@ -189,12 +189,16 @@ function internets_forecast() {
 		send_msg($channel,'Usage: "f [location]" ("f 30548", "f Hoschton, GA", "f New York City")');
 	} else {
 		$w = json_decode(internets_get_contents('http://api.wunderground.com/api/' . WUNDERGROUND_APIKEY . '/geolookup/forecast7day/q/' . urlencode($arguments) . '.json'),TRUE);
-		$response = array();
-		$response[] = $w['location']['city'] . ' forecast';
-		foreach ($w['forecast']['simpleforecast']['forecastday'] as $day) {
-			$response[] = $day['date']['weekday'] . ': ' . $day['conditions'] . ' ' . $day['low']['fahrenheit'] . '-' . $day['high']['fahrenheit'] . 'F ('  . $day['low']['celsius'] . '-' . $day['high']['celsius'] . 'C)';
+		if (isset($w['response']['error'])) {
+			send_msg($channel,"Error: ".$w['response']['error']['description']);
+		} else {
+			$response = array();
+			$response[] = $w['location']['city'] . ' forecast';
+			foreach ($w['forecast']['simpleforecast']['forecastday'] as $day) {
+				$response[] = $day['date']['weekday'] . ': ' . $day['conditions'] . ' ' . $day['low']['fahrenheit'] . '-' . $day['high']['fahrenheit'] . 'F ('  . $day['low']['celsius'] . '-' . $day['high']['celsius'] . 'C)';
+			}
+			send_msg($channel,implode(', ',$response));
 		}
-		send_msg($channel,implode(' :: ',$response));
 	}
 }
 function internets_fml() {
