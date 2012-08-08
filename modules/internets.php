@@ -3,7 +3,7 @@
 define('JMP_USERNAME','o_350gb401dt');
 define('JMP_APIKEY','R_ab02f29376cbc60916f569645a9772a7');
 define('WUNDERGROUND_APIKEY','208a003e3946c0ca');
-define('BING_APPID','AC1581361F2ECCC01C4D49F143D4A14003712E4A');
+define('ADM_ACCKEY','z3XaqGuQJBkfa5200/+DLsgJ69h7r76Wqj0PLXYCBcA='); // Azure Data Marketplace account key
 define('REDDIT_BASEURL','http://www.reddit.com/');
 $function_map['internets'] = array(
 	'shorten'=>'internets_shorten',
@@ -51,15 +51,37 @@ $help_map['internets'] = array(
 	'whatpulse'=>$help_map['internets']['pulse'],
 	'karma'=>'Retrieves karma stats and other info about a redditor.',
 );
-function internets_bing_search($string) {
-	$url = 'http://api.bing.net/json.aspx?AppId=' . BING_APPID;
-	$url .= '&Query=' . urlencode($string);
-	$url .= '&Sources=Web';
-	return json_decode(internets_get_contents($url),TRUE);
-}
+
 $hook_map['internets'] = array(
 	'data_in'=>'internets_hook_snarf'
 );
+
+function internets_bing_search($string) {
+
+	$accountKey = ADM_ACCKEY;
+            
+	$ServiceRootURL =  'https://api.datamarket.azure.com/Bing/Search/';
+
+	$WebSearchURL = $ServiceRootURL . 'Web?$format=json&$top=3&Query=';
+
+	$request = $WebSearchURL . urlencode( '\'' . $string . '\'');
+
+	echo($request);
+	$context = stream_context_create(array(
+		'http' => array(
+		    'request_fulluri' => true,
+		    'header'  => "Authorization: Basic " . base64_encode($accountKey . ":" . $accountKey)
+		)
+	));
+
+	$response = file_get_contents($request, 0, $context);
+
+	$jsonobj = json_decode($response,TRUE);
+
+	return $jsonobj;
+	
+}
+
 function internets_get_contents($url,$post=NULL) {
 	$ch = curl_init();
 	curl_setopt_array($ch,array(
@@ -163,8 +185,8 @@ function internets_weather() {
 	} else {
 		$w = json_decode(internets_get_contents('http://api.wunderground.com/api/' . WUNDERGROUND_APIKEY . '/conditions/q/' . urlencode($arguments) . '.json'),TRUE);
 		
-		if(empty($w['current_observation']['display_location']['full'])) {
-			send_msg($channel,'invalid location');
+		if (isset($w['response']['error'])) {
+			send_msg($channel,"Error: ".$w['response']['error']['description']);
 		} else {
 			$response = array(
 				$w['current_observation']['display_location']['full'],
@@ -179,7 +201,7 @@ function internets_weather() {
 				'Precipitation today: ' . $w['current_observation']['precip_today_string'],
 			);
 
-			send_msg($channel,implode(' :: ',$response));
+			send_msg($channel,implode(', ',$response));
 		}
 	}
 }
@@ -189,12 +211,16 @@ function internets_forecast() {
 		send_msg($channel,'Usage: "f [location]" ("f 30548", "f Hoschton, GA", "f New York City")');
 	} else {
 		$w = json_decode(internets_get_contents('http://api.wunderground.com/api/' . WUNDERGROUND_APIKEY . '/geolookup/forecast7day/q/' . urlencode($arguments) . '.json'),TRUE);
-		$response = array();
-		$response[] = $w['location']['city'] . ' forecast';
-		foreach ($w['forecast']['simpleforecast']['forecastday'] as $day) {
-			$response[] = $day['date']['weekday'] . ': ' . $day['conditions'] . ' ' . $day['low']['fahrenheit'] . '-' . $day['high']['fahrenheit'] . 'F ('  . $day['low']['celsius'] . '-' . $day['high']['celsius'] . 'C)';
+		if (isset($w['response']['error'])) {
+			send_msg($channel,"Error: ".$w['response']['error']['description']);
+		} else {
+			$response = array();
+			$response[] = $w['location']['city'] . ' forecast';
+			foreach ($w['forecast']['simpleforecast']['forecastday'] as $day) {
+				$response[] = $day['date']['weekday'] . ': ' . $day['conditions'] . ' ' . $day['low']['fahrenheit'] . '-' . $day['high']['fahrenheit'] . 'F ('  . $day['low']['celsius'] . '-' . $day['high']['celsius'] . 'C)';
+			}
+			send_msg($channel,implode(', ',$response));
 		}
-		send_msg($channel,implode(' :: ',$response));
 	}
 }
 function internets_fml() {
@@ -231,16 +257,23 @@ function internets_youtube() {
 }
 function internets_bing() {
 	global $channel,$arguments;
-	$results = internets_bing_search($arguments);
-	if (!$results) {
-		$resultsirc = 'Unable to contact the Bing! API.';
+	if (empty($arguments)) {
+		send_msg($channel,'Usage: "Bing [search terms go here]"');
 	} else {
-		foreach ($results['SearchResponse']['Web']['Results'] as $result) {
-			$resultsirc[] = $result['Title'] . ' <' . $result['Url'] . '>';
+		$results = internets_bing_search($arguments);
+		if (!$results) {
+			$resultsirc = 'Unable to contact the Bing! API.';
+		} elseif (isset($results['SearchResponse']['Errors'])) {
+			$resultsirc = "Error: Code ". $results['SearchResponse']['Errors'][0]['Code'];
+		} else {
+			foreach ($results['d']['results'] as $result) {
+				$resultsirc[] = $result['Title'] . ' <' . $result['Url'] . '>';
+			}
+			$resultsirc = 'Results: ' . implode(', ',$resultsirc);
 		}
-		$resultsirc = implode(', ',$resultsirc);
+		send_msg($channel, $resultsirc);
 	}
-	send_msg($channel,'Results: ' . $resultsirc);
+	
 }
 function internets_whatpulse() {
 	global $channel,$arguments;
@@ -260,8 +293,11 @@ function internets_whatpulse() {
 function internets_hook_snarf() {
 	global $channel,$args,$arguments,$buffwords;
 	$snarf_command = strtolower(substr($buffwords[3],1));
+
+	//Checks for Bing or google and redirect to internets_bing
 	if ($snarf_command=='bing'||$snarf_command=='google') {
-		$results = internets_bing_search(substr($arguments,5));
-		send_msg($channel,$results['SearchResponse']['Web']['Results'][0]['Url']);
+		
+		internets_bing();
+
 	}
 }
