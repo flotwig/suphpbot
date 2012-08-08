@@ -16,8 +16,12 @@ $function_map[$scriptname] = array(
 );
 
 $help_map[$scriptname] = array (
-    'police' => 'Prints an ASCII of a police car',
+    'police' => 'Prints an ASCII of a police car, also can be called by dialing 911',
     'hello' => 'Prints Hello world'
+);
+
+$hook_map[$scriptname] = array (
+    'data_in' => 'silly_sniffer',
 );
 
 function silly_hello () {
@@ -48,4 +52,17 @@ function silly_five_O () {
 
 }
 
+// sinffer for commands without the preceding command character,
+// based on internets snarf function.
+
+function silly_sniffer () {
+
+    global $buffwords;
+
+    $sniffed_command = strtolower(substr($buffwords[3],1));
+
+    if ($sniffed_command == '911') {
+         silly_five_O();
+    }
+}
 ?>
