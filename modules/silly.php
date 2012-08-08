@@ -12,14 +12,12 @@ $scriptname = str_replace(".php","",basename(__FILE__));
 
 $function_map[$scriptname] = array(
     'police' => 'silly_five_O',
-	'911' => 'silly_five_O',
-    'hello' => 'silly_hello',
+    'hello' => 'silly_hello'
 );
 
 $help_map[$scriptname] = array (
     'police' => 'Prints an ASCII of a police car, also can be called by dialing 911',
-    'hello' => 'Prints Hello world',
-	'911' => $help_map['silly']['police'],
+    'hello' => 'Prints Hello world'
 );
 
 $hook_map[$scriptname] = array (
