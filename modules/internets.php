@@ -162,19 +162,25 @@ function internets_weather() {
 		send_msg($channel,'Usage: "w [location]" ("w 30548", "w Hoschton, GA", "w New York City")');
 	} else {
 		$w = json_decode(internets_get_contents('http://api.wunderground.com/api/' . WUNDERGROUND_APIKEY . '/conditions/q/' . urlencode($arguments) . '.json'),TRUE);
-		$response = array(
-			$w['current_observation']['display_location']['full'],
-			'Conditions: ' . $w['current_observation']['weather'],
-			'Temperature: ' . $w['current_observation']['temperature_string'],
-			'Wind chill: ' . $w['current_observation']['windchill_string'],
-			'Dew point: ' . $w['current_observation']['dewpoint_string'],
-			'Humidity: ' . $w['current_observation']['relative_humidity'],
-			'Wind: ' . $w['current_observation']['wind_string'],
-			'Visibility: ' . $w['current_observation']['visibility_mi'] . 'mi, ' . $w['current_observation']['visibility_km'] . 'km',
-			'Pressure: ' . $w['current_observation']['pressure_mb'] . 'mb (' . $w['current_observation']['pressure_in'] . 'in)',
-			'Precipitation today: ' . $w['current_observation']['precip_today_string'],
-		);
-		send_msg($channel,implode(' :: ',$response));
+		
+		if(empty($w['current_observation']['display_location']['full'])) {
+			send_msg($channel,'invalid location');
+		} else {
+			$response = array(
+				$w['current_observation']['display_location']['full'],
+				'Conditions: ' . $w['current_observation']['weather'],
+				'Temperature: ' . $w['current_observation']['temperature_string'],
+				'Wind chill: ' . $w['current_observation']['windchill_string'],
+				'Dew point: ' . $w['current_observation']['dewpoint_string'],
+				'Humidity: ' . $w['current_observation']['relative_humidity'],
+				'Wind: ' . $w['current_observation']['wind_string'],
+				'Visibility: ' . $w['current_observation']['visibility_mi'] . 'mi, ' . $w['current_observation']['visibility_km'] . 'km',
+				'Pressure: ' . $w['current_observation']['pressure_mb'] . 'mb (' . $w['current_observation']['pressure_in'] . 'in)',
+				'Precipitation today: ' . $w['current_observation']['precip_today_string'],
+			);
+
+			send_msg($channel,implode(' :: ',$response));
+		}
 	}
 }
 function internets_forecast() {
