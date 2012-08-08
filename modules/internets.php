@@ -272,20 +272,10 @@ function internets_hook_snarf() {
 	global $channel,$args,$arguments,$buffwords;
 	$snarf_command = strtolower(substr($buffwords[3],1));
 
-	//Checks for Bing or google and redirect and query bing
+	//Checks for Bing or google and redirect to internets_bing
 	if ($snarf_command=='bing'||$snarf_command=='google') {
-		if (empty($arguments)) {
-			send_msg($channel,'Usage: "Bing [search terms go here]"');
-		} else {
-			$results = internets_bing_search($arguments);
-
-			if (isset($results['SearchResponse']['Errors'])) {
-				send_msg($channel,"Error: Code ". $results['SearchResponse']['Errors'][0]['Code']);
-			} else {
-				send_msg($channel,$results['SearchResponse']['Web']['Results'][0]['Url']);
-			}
-			
-		}
+		
+		internets_bing();
 
 	}
 }
