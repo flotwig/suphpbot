@@ -235,16 +235,23 @@ function internets_youtube() {
 }
 function internets_bing() {
 	global $channel,$arguments;
-	$results = internets_bing_search($arguments);
-	if (!$results) {
-		$resultsirc = 'Unable to contact the Bing! API.';
+	if (empty($arguments)) {
+		send_msg($channel,'Usage: "Bing [search terms go here]"');
 	} else {
-		foreach ($results['SearchResponse']['Web']['Results'] as $result) {
-			$resultsirc[] = $result['Title'] . ' <' . $result['Url'] . '>';
+		$results = internets_bing_search($arguments);
+		if (!$results) {
+			$resultsirc = 'Unable to contact the Bing! API.';
+		} elseif (isset($results['SearchResponse']['Errors'])) {
+			$resultsirc = "Error: Code ". $results['SearchResponse']['Errors'][0]['Code'];
+		} else {
+			foreach ($results['SearchResponse']['Web']['Results'] as $result) {
+				$resultsirc[] = $result['Title'] . ' <' . $result['Url'] . '>';
+			}
+			$resultsirc = 'Results: ' . implode(', ',$resultsirc);
 		}
-		$resultsirc = implode(', ',$resultsirc);
+		send_msg($channel, $resultsirc);
 	}
-	send_msg($channel,'Results: ' . $resultsirc);
+	
 }
 function internets_whatpulse() {
 	global $channel,$arguments;
@@ -264,8 +271,21 @@ function internets_whatpulse() {
 function internets_hook_snarf() {
 	global $channel,$args,$arguments,$buffwords;
 	$snarf_command = strtolower(substr($buffwords[3],1));
+
+	//Checks for Bing or google and redirect and query bing
 	if ($snarf_command=='bing'||$snarf_command=='google') {
-		$results = internets_bing_search(substr($arguments,5));
-		send_msg($channel,$results['SearchResponse']['Web']['Results'][0]['Url']);
+		if (empty($arguments)) {
+			send_msg($channel,'Usage: "Bing [search terms go here]"');
+		} else {
+			$results = internets_bing_search($arguments);
+
+			if (isset($results['SearchResponse']['Errors'])) {
+				send_msg($channel,"Error: Code ". $results['SearchResponse']['Errors'][0]['Code']);
+			} else {
+				send_msg($channel,$results['SearchResponse']['Web']['Results'][0]['Url']);
+			}
+			
+		}
+
 	}
 }
