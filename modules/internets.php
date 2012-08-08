@@ -3,7 +3,7 @@
 define('JMP_USERNAME','o_350gb401dt');
 define('JMP_APIKEY','R_ab02f29376cbc60916f569645a9772a7');
 define('WUNDERGROUND_APIKEY','208a003e3946c0ca');
-define('BING_APPID','AC1581361F2ECCC01C4D49F143D4A14003712E4A');
+define('ADM_ACCKEY','z3XaqGuQJBkfa5200/+DLsgJ69h7r76Wqj0PLXYCBcA='); // Azure Data Marketplace account key
 define('REDDIT_BASEURL','http://www.reddit.com/');
 $function_map['internets'] = array(
 	'shorten'=>'internets_shorten',
@@ -57,10 +57,29 @@ $hook_map['internets'] = array(
 );
 
 function internets_bing_search($string) {
-	$url = 'http://api.bing.net/json.aspx?AppId=' . BING_APPID;
-	$url .= '&Query=' . urlencode($string);
-	$url .= '&Sources=Web';
-	return json_decode(internets_get_contents($url),TRUE);
+
+	$accountKey = ADM_ACCKEY;
+            
+	$ServiceRootURL =  'https://api.datamarket.azure.com/Bing/Search/';
+
+	$WebSearchURL = $ServiceRootURL . 'Web?$format=json&$top=3&Query=';
+
+	$request = $WebSearchURL . urlencode( '\'' . $string . '\'');
+
+	echo($request);
+	$context = stream_context_create(array(
+		'http' => array(
+		    'request_fulluri' => true,
+		    'header'  => "Authorization: Basic " . base64_encode($accountKey . ":" . $accountKey)
+		)
+	));
+
+	$response = file_get_contents($request, 0, $context);
+
+	$jsonobj = json_decode($response,TRUE);
+
+	return $jsonobj;
+	
 }
 
 function internets_get_contents($url,$post=NULL) {
@@ -247,7 +266,7 @@ function internets_bing() {
 		} elseif (isset($results['SearchResponse']['Errors'])) {
 			$resultsirc = "Error: Code ". $results['SearchResponse']['Errors'][0]['Code'];
 		} else {
-			foreach ($results['SearchResponse']['Web']['Results'] as $result) {
+			foreach ($results['d']['results'] as $result) {
 				$resultsirc[] = $result['Title'] . ' <' . $result['Url'] . '>';
 			}
 			$resultsirc = 'Results: ' . implode(', ',$resultsirc);
