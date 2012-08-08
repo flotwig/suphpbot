@@ -76,7 +76,7 @@ function silly_sniffer () {
 
 function user_false() {
 	global $args,$channel,$nick;
-	$artist = 'Judas Prist';
+	$artist = 'Judas Priest';
 	$plays = 666; // if less than this, user false. 
 	$user = get_lastfm_user($nick);
 	if ($args[0]) { // if user specified user
@@ -88,10 +88,10 @@ function user_false() {
 	if (!$user) { // if user is set and no specified nick
 		return nothing_met($channel);
 	} 
-	$data = get_lastfm_data('artist.getinfo','limit=1&username=' . urlencode($user) . '&artist=' . urlencode($artist));
+	$data = get_lastfm_data('artist.getinfo','username=' . urlencode($user) . '&artist=' . urlencode($artist));
 	if ($data['artist']['stats']['userplaycount']) {
 		if ($data['artist']['stats']['userplaycount'] < $plays) {
-			$str = '"' . $user . '" only has ' . $data['artist']['stats']['userplaycount'];
+			$str = '"' . $user . '" only has ' . $data['artist']['stats']['userplaycount'] . ' ';
 			$str .= $data['artist']['name'] . ' plays.  "' . $user . '" is false. ';
 			$str .= $plays - $data['artist']['stats']['userplaycount'] . ' more plays required to be trve.';
 		} else {
