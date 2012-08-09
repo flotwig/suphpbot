@@ -149,9 +149,13 @@ function core_command_list() {
 		foreach ($function_map[$arguments] as $command => $function) {
 			$ocomm[] = $command;
 		}
-		sort($ocomm);
-		$ocomm = implode(', ',$ocomm);
-		send_msg($nick,'Commands in ' . $arguments . ': ' . $ocomm,1);
+		if (count($ocomm) > 0 ) {
+			sort($ocomm);
+			$ocomm = implode(', ',$ocomm);
+			send_msg($nick,'Commands in ' . $arguments . ': ' . $ocomm,1);
+		} else {
+			send_msg($nick,'No commands found in ' . $arguments,1);
+		}
 	}
 }
 function core_quit() {
