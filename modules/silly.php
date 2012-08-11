@@ -13,7 +13,7 @@ $scriptname = str_replace(".php","",basename(__FILE__));
 $function_map[$scriptname] = array(
     'police' => 'silly_five_O',
     'hello' => 'silly_hello',
-    'false' => 'user_false'
+    'false' => 'silly_false'
 );
 
 $help_map[$scriptname] = array (
@@ -73,7 +73,7 @@ function silly_sniffer () {
 
 // Checks if user is false
 
-function user_false() {
+function silly_false() {
 	global $args,$channel,$nick;
 	$artist = 'Judas Priest';
 	$plays = 666; // if less than this, user false. 
