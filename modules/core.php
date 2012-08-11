@@ -200,7 +200,7 @@ function core_config() {
 			$value = implode(' ',array_slice($buffwords,5));
 			$settings[$key] = $value;
 			save_settings(array('phpbot'=>$settings),$config);
-			send_msg($channel,"Your option have been saved, please restart the bot for the new option takes effect.");
+			send_msg($channel,"Your option has been changed.");
 		}
 	}
 }
