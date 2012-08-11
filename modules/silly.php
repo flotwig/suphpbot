@@ -35,8 +35,8 @@ function silly_hello () {
 }
 
 function silly_five_O () {
-    global $channel,$nick;
-	$allowed = array('BrutalN00dle','kwamaking','Skuld','StompinBroknGlas','Shamed','Mike','thegauntlet','nakedcups','Fenriz','BrutalMobile','PenetratorHammer');
+    global $channel,$nick,$settings;
+	$allowed = explode(',',$settings['allowed_users']);
 	if (in_array($nick,$allowed)) {
 		// Drawing the car using ACSII
 
@@ -57,7 +57,6 @@ function silly_five_O () {
 		$line1 = "Calling the police on false pretenses is a crime...";
 		send('PRIVMSG ' . $channel . ' :' . $line1);
 	}
-
 }
 
 // sinffer for commands without the preceding command character,
