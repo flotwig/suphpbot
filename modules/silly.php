@@ -36,7 +36,7 @@ function silly_hello () {
 
 function silly_five_O () {
     global $channel,$nick;
-	$allowed = array('BrutalN00dle','kwamaking','Skuld','StompinBroknGlas','Shamed','Mike','thegauntlet','nakedcups','Fenriz','BrutalMobile');
+	$allowed = array('BrutalN00dle','kwamaking','Skuld','StompinBroknGlas','Shamed','Mike','thegauntlet','nakedcups','Fenriz','BrutalMobile','PenetratorHammer');
 	if (in_array($nick,$allowed)) {
 		// Drawing the car using ACSII
 
@@ -95,7 +95,7 @@ function user_false() {
 			$str .= $data['artist']['name'] . ' plays.  "' . $user . '" is false. ';
 			$str .= $plays - $data['artist']['stats']['userplaycount'] . ' more plays required to be trve.';
 		} else {
-			$str = '"' . $user . '"  has ' . $data['artist']['stats']['userplaycount'];
+			$str = '"' . $user . '"  has ' . $data['artist']['stats']['userplaycount'] . ' ';
 			$str .= $data['artist']['name'] . ' plays.  "' . $user . '" is trve.';
 		}
 	} else {
