@@ -324,7 +324,7 @@ function genre() {
 		$str = '"' . $taginfo['tag']['name'] . '" - ';
 	}
 	if (is_array($taginfo['tag']['wiki'])) { // Check if tag description exists.
-		$str .= html_entity_decode(substr($taginfo['tag']['wiki']['summary'], 0, 200)) . '...';
+		$str .= html_entity_decode(substr(strip_tags($taginfo['tag']['wiki']['summary']), 0, 200)) . '...';
 	}
 	if ($similar['similartags']['tag'] && !$similar['similartags']['#text']) { // Check if there are similar tags.
 		$tagamount = 0;

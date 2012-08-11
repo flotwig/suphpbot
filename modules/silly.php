@@ -13,7 +13,7 @@ $scriptname = str_replace(".php","",basename(__FILE__));
 $function_map[$scriptname] = array(
     'police' => 'silly_five_O',
     'hello' => 'silly_hello',
-    'false' => 'user_false'
+    'false' => 'silly_false'
 );
 
 $help_map[$scriptname] = array (
@@ -35,8 +35,8 @@ function silly_hello () {
 }
 
 function silly_five_O () {
-    global $channel,$nick;
-	$allowed = array('BrutalN00dle','kwamaking','Skuld','StompinBroknGlas','Shamed','Mike','thegauntlet','nakedcups','Fenriz','BrutalMobile');
+    global $channel,$nick,$settings;
+	$allowed = explode(',',$settings['allowed_users']);
 	if (in_array($nick,$allowed)) {
 		// Drawing the car using ACSII
 
@@ -57,7 +57,6 @@ function silly_five_O () {
 		$line1 = "Calling the police on false pretenses is a crime...";
 		send('PRIVMSG ' . $channel . ' :' . $line1);
 	}
-
 }
 
 // sinffer for commands without the preceding command character,
@@ -74,7 +73,7 @@ function silly_sniffer () {
 
 // Checks if user is false
 
-function user_false() {
+function silly_false() {
 	global $args,$channel,$nick;
 	$artist = 'Judas Priest';
 	$plays = 666; // if less than this, user false. 
@@ -95,7 +94,7 @@ function user_false() {
 			$str .= $data['artist']['name'] . ' plays.  "' . $user . '" is false. ';
 			$str .= $plays - $data['artist']['stats']['userplaycount'] . ' more plays required to be trve.';
 		} else {
-			$str = '"' . $user . '"  has ' . $data['artist']['stats']['userplaycount'];
+			$str = '"' . $user . '"  has ' . $data['artist']['stats']['userplaycount'] . ' ';
 			$str .= $data['artist']['name'] . ' plays.  "' . $user . '" is trve.';
 		}
 	} else {

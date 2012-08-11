@@ -291,13 +291,16 @@ function internets_whatpulse() {
 }
 // snarf shits yo!
 function internets_hook_snarf() {
-	global $channel,$args,$arguments,$buffwords;
-	$snarf_command = strtolower(substr($buffwords[3],1));
+	global $channel,$args,$arguments,$buffwords,$settings;
 
-	//Checks for Bing or google and redirect to internets_bing
-	if ($snarf_command=='bing'||$snarf_command=='google') {
+	if ($settings['direct_search'] == 1){
+		$snarf_command = strtolower(substr($buffwords[3],1));
+
+		//Checks for Bing or google and redirect to internets_bing
+		if ($snarf_command=='bing'||$snarf_command=='google') {
 		
-		internets_bing();
+			internets_bing();
 
+		}
 	}
 }
