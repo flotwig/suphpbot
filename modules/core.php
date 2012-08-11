@@ -149,9 +149,13 @@ function core_command_list() {
 		foreach ($function_map[$arguments] as $command => $function) {
 			$ocomm[] = $command;
 		}
-		sort($ocomm);
-		$ocomm = implode(', ',$ocomm);
-		send_msg($nick,'Commands in ' . $arguments . ': ' . $ocomm,1);
+		if (count($ocomm) > 0 ) {
+			sort($ocomm);
+			$ocomm = implode(', ',$ocomm);
+			send_msg($nick,'Commands in ' . $arguments . ': ' . $ocomm,1);
+		} else {
+			send_msg($nick,'No commands found in ' . $arguments,1);
+		}
 	}
 }
 function core_quit() {
@@ -189,11 +193,14 @@ function core_config() {
 	} else {
 		if (!$admin) {
 			noperms();
+		} elseif (empty($buffwords[4])) {
+			send_msg($channel,'The option name is empty, please check and try again.');
 		} else {
 			$key = $buffwords[4];
 			$value = implode(' ',array_slice($buffwords,5));
 			$settings[$key] = $value;
 			save_settings(array('phpbot'=>$settings),$config);
+			send_msg($channel,"Your option have been saved, please restart the bot for the new option takes effect.");
 		}
 	}
 }
