@@ -53,7 +53,7 @@ function youtube_sniffer () {
 
        // make the urls hyper links
 //       echo preg_replace($reg_exUrl, "<a href="{$url[0]}">{$url[0]}</a> ", $text);
-		send('PRIVMSG ' . $channel . ' :' . $title);
+		send('PRIVMSG ' . $channel . ' :' ."Youtube Video: ". $title);
 	}
 
 	
