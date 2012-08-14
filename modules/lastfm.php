@@ -92,7 +92,7 @@ function get_lastfm_data($method,$paramstr) {
 // I wanted a second function for this since i'll be using it often
 // Eventually I'll write this to the cache file
 function get_top_tags($artist) {
-	$def = get_lastfm_data('artist.gettoptags','mbid=' . urlencode($artist));
+	$def = get_lastfm_data('artist.gettoptags','artist=' . urlencode($artist));
 	$tagamount = 0;
 	$tags = array();
 	if ($def['toptags']) { // Check if artist has top tags
@@ -126,8 +126,8 @@ function now_playing() {
 	if ($firstTrack['@attr']['nowplaying']) {
 		// if now playing is true, use track.getinfo and top tags methods 
 		// this gives us additional information about the track
-		$trackinfo = get_lastfm_data('track.getinfo','mbid=' . $firstTrack['mbid'] . '&username=' . urlencode($user));
-		$toptags = get_top_tags($firstTrack['artist']['mbid']);
+		$trackinfo = get_lastfm_data('track.getinfo','artist=' . urlencode($firstTrack['artist']['#text']) . '&track=' . urlencode($firstTrack['name']) . '&username=' . urlencode($user));
+		$toptags = get_top_tags($firstTrack['artist']['#text']);
 		$str =  ' "' . $user . '" is now playing '.$firstTrack['artist']['#text'];
 		$str .= ' - ' . $firstTrack['name'];
 		if ($firstTrack['album']['#text'])  { // check if album exists
@@ -212,7 +212,7 @@ function artist_info() {
 				}
 				$str .= ' Similar artists include: (' . join(', ',$artistarray) . ')';
 			}
-			$toptags = get_top_tags($data['artist']['mbid']);
+			$toptags = get_top_tags($data['artist']['name']);
 			if ($toptags) { // Check if artist has toptags
 				$str .= ' Tags: (' . $toptags . ')';	
 			}
@@ -249,12 +249,14 @@ function compare_users() {
 	$data = get_lastfm_data('tasteometer.compare','type1=user&type2=user&value1=' . urlencode($user) . '&value2=' . urlencode($user2));
 	if ($data['comparison']['result']['score'] > 0) { // Make sure there are artists and there is at least something to compare
 		$str = '"' . $user . '" vs "' . $user2 . '": ' . round($data['comparison']['result']['score']*100, 1) . '% - ';
-		if ($data['comparison']['result']['artists']) { // Check if common artists exist
+		if ($data['comparison']['result']['artists']['artist'][1]['name']) { // Check for more than one common artist
 			$resultarray = array();
 			foreach ($data['comparison']['result']['artists']['artist'] as $common) {
 				array_push($resultarray, $common['name']);
 			}
 			$str .= ' Common artists include: (' . join(', ',$resultarray) . ')';
+		} else {
+				$str .= ' One common artist: (' . $data['comparison']['result']['artists']['artist']['name'] . ')';		
 		}
 	} else {
 		$str = 'There are no common artists between ' . $user . ' and ' . $user2 . '.';
@@ -275,8 +277,7 @@ function plays() {
 	if ($data['artist']['name'] && $data['artist']['stats']['userplaycount']) { // Checks for playcount
 		$str = '"' . $user . '" has ' . $data['artist']['stats']['userplaycount'];
 		$str .= ' ' . $data['artist']['name'] . ' plays.';
-	} 
-	else if ($data['artist']['name']) {
+	} else if ($data['artist']['name']) {
 		$str = '"' . $user . '" has never listened to ' . $data['artist']['name'];
 	} else {
 		$str = 'Last.fm has no record of ' . $artist;
