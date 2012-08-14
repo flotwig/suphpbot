@@ -314,46 +314,47 @@ function whois() {
 	send_msg($channel,$str);
 }
 function genre() {
-	global $arguments,$channel;
+	global $arguments,$channel,$args;
 	$similar = get_lastfm_data('tag.getsimilar','tag=' . urlencode($arguments));
 	$taginfo = get_lastfm_data('tag.getinfo','tag=' . urlencode($arguments));
 	$tagartists = get_lastfm_data('tag.gettopartists','tag=' . urlencode($arguments));
-	if (!$arguments) {
+	if (!$args[0]) {
 		$str = 'Please include a genre or tag name.';
-	}
-	if ($taginfo['tag']['name']) { // Grab tagname... 
-		$str = '"' . $taginfo['tag']['name'] . '" - ';
-	}
-	if (is_array($taginfo['tag']['wiki'])) { // Check if tag description exists.
-		$str .= html_entity_decode(substr(strip_tags($taginfo['tag']['wiki']['summary']), 0, 200)) . '...';
-	}
-	if ($similar['similartags']['tag'] && !$similar['similartags']['#text']) { // Check if there are similar tags.
-		$tagamount = 0;
-		$tags = array();
-		foreach ($similar['similartags']['tag'] as $tag) {
-			if ($tagamount++ == 5) {
-				break;
-			}
-			array_push($tags,$tag['name']);
+	} else {
+		if ($taginfo['tag']['name']) { // Grab tagname... 
+			$str = '"' . $taginfo['tag']['name'] . '" - ';
 		}
-		$str .= ' Similar tags: (' . join(', ',$tags) . ')';
-	}
-	if ($tagartists['topartists']['artist']) { // Check if there are similar artists.
-		$artistnum = 0;
-		$topartists = array();
-		foreach ($tagartists['topartists']['artist'] as $artist) {
-			if ($artistnum++ == 5) {
-				break;
-			}
-			array_push($topartists,$artist['name']);
+		if (is_array($taginfo['tag']['wiki'])) { // Check if tag description exists.
+			$str .= html_entity_decode(substr(strip_tags($taginfo['tag']['wiki']['summary']), 0, 200)) . '...';
 		}
-		$str .= ' Top artists: (' . join(', ',$topartists) . ')';
-	}
-	if ($taginfo['tag']['url']) { // Make sure URL exists.
-		$str .= ' (' . internets_shorten_url($taginfo['tag']['url']) . ')';
-	}
-	if ($taginfo['error'])	{
-		$str = '"' . $arguments . '" Either doesn\'t exist or no description available.';
+		if ($similar['similartags']['tag'] && !$similar['similartags']['#text']) { // Check if there are similar tags.
+			$tagamount = 0;
+			$tags = array();
+			foreach ($similar['similartags']['tag'] as $tag) {
+				if ($tagamount++ == 5) {
+					break;
+				}
+				array_push($tags,$tag['name']);
+			}
+			$str .= ' Similar tags: (' . join(', ',$tags) . ')';
+		}
+		if ($tagartists['topartists']['artist']) { // Check if there are similar artists.
+			$artistnum = 0;
+			$topartists = array();
+			foreach ($tagartists['topartists']['artist'] as $artist) {
+				if ($artistnum++ == 5) {
+					break;
+				}
+				array_push($topartists,$artist['name']);
+			}
+			$str .= ' Top artists: (' . join(', ',$topartists) . ')';
+		}
+		if ($taginfo['tag']['url']) { // Make sure URL exists.
+			$str .= ' (' . internets_shorten_url($taginfo['tag']['url']) . ')';
+		}
+		if ($taginfo['error'])	{
+			$str = '"' . $arguments . '" Either doesn\'t exist or no description available.';
+		}
 	}
 	send_msg($channel,$str);
 }
