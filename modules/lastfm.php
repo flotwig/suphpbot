@@ -123,8 +123,7 @@ function now_playing() {
 	} 
 	$data = get_lastfm_data('user.getrecenttracks','user=' . urlencode($user) . '&limit=1');
 	$firstTrack = $data['recenttracks']['track'][0]; // smaller is better
-	if ($firstTrack['@attr']['nowplaying']) {
-		// if now playing is true, use track.getinfo and top tags methods 
+	if ($firstTrack['@attr']['nowplaying']) {// if now playing is true, use track.getinfo and top tags methods 
 		// this gives us additional information about the track
 		$trackinfo = get_lastfm_data('track.getinfo','artist=' . urlencode($firstTrack['artist']['#text']) . '&track=' . urlencode($firstTrack['name']) . '&username=' . urlencode($user));
 		$toptags = get_top_tags($firstTrack['artist']['#text']);
