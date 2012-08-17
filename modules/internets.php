@@ -90,6 +90,7 @@ function internets_get_contents($url,$post=NULL) {
 		CURLOPT_RETURNTRANSFER=>TRUE,
 		CURLOPT_URL=>$url,
 		CURLOPT_USERAGENT=>IRC_VERSION,
+		CURLOPT_CONNECTTIMEOUT=>5,
 	));
 	if (is_array($post)) {
 		curl_setopt($ch,CURLOPT_POST,TRUE);

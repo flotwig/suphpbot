@@ -17,6 +17,7 @@ $function_map['core'] = array(
 	'help'=>'core_help',
 	'eval'=>'core_eval',
 	'restart'=>'core_restart',
+	'allow_user'=>'allow_user',
 );
 $help_map['core'] = array(
 	'load'=>'Loads a module. Type "load modulename" as an admin to load modules.',
@@ -34,6 +35,7 @@ $help_map['core'] = array(
 	'help'=>'Get help for a command. You probably already know how to use this, because you\'re using it right now...?',
 	'eval'=>'Runs raw arguments through PHP eval(). Disabled by default.',
 	'restart'=>'Start another instance of the bot and kill this one.',
+	'allow_user'=>'Adds given user to allowed_user option in the configuration file. This is for features that you only want certain people to use (non admin)',
 );
 function core_help() {
 	global $channel, $args, $help, $commands, $settings, $nick;
@@ -200,7 +202,7 @@ function core_config() {
 			$value = implode(' ',array_slice($buffwords,5));
 			$settings[$key] = $value;
 			save_settings(array('phpbot'=>$settings),$config);
-			send_msg($channel,"Your option have been saved, please restart the bot for the new option takes effect.");
+			send_msg($channel,"Your option has been changed.");
 		}
 	}
 }
@@ -222,5 +224,21 @@ function core_restart() {
 		fclose($socket);
 		fork_bot();
 		die();
+	}
+}
+function allow_user() {
+	global $arguments,$settings,$channel,$admin;
+	if ($admin) {
+		if ($arguments) {
+			$users = explode(',',$settings['allowed_users']);
+			array_push($users,$arguments);
+			$settings['allowed_users'] = join(',',$users);
+			save_settings(array('phpbot'=>$settings),$config);
+			send_msg($channel,'User has been added.');
+		} else {
+			send_msg($channel,"Please provide an argument.");			
+		}
+	} else {
+		noperms();
 	}
 }

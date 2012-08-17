@@ -92,7 +92,7 @@ function get_lastfm_data($method,$paramstr) {
 // I wanted a second function for this since i'll be using it often
 // Eventually I'll write this to the cache file
 function get_top_tags($artist) {
-	$def = get_lastfm_data('artist.gettoptags','mbid=' . urlencode($artist));
+	$def = get_lastfm_data('artist.gettoptags','artist=' . urlencode($artist));
 	$tagamount = 0;
 	$tags = array();
 	if ($def['toptags']) { // Check if artist has top tags
@@ -123,11 +123,10 @@ function now_playing() {
 	} 
 	$data = get_lastfm_data('user.getrecenttracks','user=' . urlencode($user) . '&limit=1');
 	$firstTrack = $data['recenttracks']['track'][0]; // smaller is better
-	if ($firstTrack['@attr']['nowplaying']) {
-		// if now playing is true, use track.getinfo and top tags methods 
+	if ($firstTrack['@attr']['nowplaying']) {// if now playing is true, use track.getinfo and top tags methods 
 		// this gives us additional information about the track
-		$trackinfo = get_lastfm_data('track.getinfo','mbid=' . $firstTrack['mbid'] . '&username=' . urlencode($user));
-		$toptags = get_top_tags($firstTrack['artist']['mbid']);
+		$trackinfo = get_lastfm_data('track.getinfo','artist=' . urlencode($firstTrack['artist']['#text']) . '&track=' . urlencode($firstTrack['name']) . '&username=' . urlencode($user));
+		$toptags = get_top_tags($firstTrack['artist']['#text']);
 		$str =  ' "' . $user . '" is now playing '.$firstTrack['artist']['#text'];
 		$str .= ' - ' . $firstTrack['name'];
 		if ($firstTrack['album']['#text'])  { // check if album exists
@@ -212,7 +211,7 @@ function artist_info() {
 				}
 				$str .= ' Similar artists include: (' . join(', ',$artistarray) . ')';
 			}
-			$toptags = get_top_tags($data['artist']['mbid']);
+			$toptags = get_top_tags($data['artist']['name']);
 			if ($toptags) { // Check if artist has toptags
 				$str .= ' Tags: (' . $toptags . ')';	
 			}
@@ -249,12 +248,14 @@ function compare_users() {
 	$data = get_lastfm_data('tasteometer.compare','type1=user&type2=user&value1=' . urlencode($user) . '&value2=' . urlencode($user2));
 	if ($data['comparison']['result']['score'] > 0) { // Make sure there are artists and there is at least something to compare
 		$str = '"' . $user . '" vs "' . $user2 . '": ' . round($data['comparison']['result']['score']*100, 1) . '% - ';
-		if ($data['comparison']['result']['artists']) { // Check if common artists exist
+		if ($data['comparison']['result']['artists']['artist'][1]['name']) { // Check for more than one common artist
 			$resultarray = array();
 			foreach ($data['comparison']['result']['artists']['artist'] as $common) {
 				array_push($resultarray, $common['name']);
 			}
 			$str .= ' Common artists include: (' . join(', ',$resultarray) . ')';
+		} else {
+				$str .= ' One common artist: (' . $data['comparison']['result']['artists']['artist']['name'] . ')';		
 		}
 	} else {
 		$str = 'There are no common artists between ' . $user . ' and ' . $user2 . '.';
@@ -275,8 +276,7 @@ function plays() {
 	if ($data['artist']['name'] && $data['artist']['stats']['userplaycount']) { // Checks for playcount
 		$str = '"' . $user . '" has ' . $data['artist']['stats']['userplaycount'];
 		$str .= ' ' . $data['artist']['name'] . ' plays.';
-	} 
-	else if ($data['artist']['name']) {
+	} else if ($data['artist']['name']) {
 		$str = '"' . $user . '" has never listened to ' . $data['artist']['name'];
 	} else {
 		$str = 'Last.fm has no record of ' . $artist;
@@ -313,46 +313,47 @@ function whois() {
 	send_msg($channel,$str);
 }
 function genre() {
-	global $arguments,$channel;
+	global $arguments,$channel,$args;
 	$similar = get_lastfm_data('tag.getsimilar','tag=' . urlencode($arguments));
 	$taginfo = get_lastfm_data('tag.getinfo','tag=' . urlencode($arguments));
 	$tagartists = get_lastfm_data('tag.gettopartists','tag=' . urlencode($arguments));
-	if (!$arguments) {
+	if (!$args[0]) {
 		$str = 'Please include a genre or tag name.';
-	}
-	if ($taginfo['tag']['name']) { // Grab tagname... 
-		$str = '"' . $taginfo['tag']['name'] . '" - ';
-	}
-	if (is_array($taginfo['tag']['wiki'])) { // Check if tag description exists.
-		$str .= html_entity_decode(substr(strip_tags($taginfo['tag']['wiki']['summary']), 0, 200)) . '...';
-	}
-	if ($similar['similartags']['tag'] && !$similar['similartags']['#text']) { // Check if there are similar tags.
-		$tagamount = 0;
-		$tags = array();
-		foreach ($similar['similartags']['tag'] as $tag) {
-			if ($tagamount++ == 5) {
-				break;
-			}
-			array_push($tags,$tag['name']);
+	} else {
+		if ($taginfo['tag']['name']) { // Grab tagname... 
+			$str = '"' . $taginfo['tag']['name'] . '" - ';
 		}
-		$str .= ' Similar tags: (' . join(', ',$tags) . ')';
-	}
-	if ($tagartists['topartists']['artist']) { // Check if there are similar artists.
-		$artistnum = 0;
-		$topartists = array();
-		foreach ($tagartists['topartists']['artist'] as $artist) {
-			if ($artistnum++ == 5) {
-				break;
-			}
-			array_push($topartists,$artist['name']);
+		if (is_array($taginfo['tag']['wiki'])) { // Check if tag description exists.
+			$str .= html_entity_decode(substr(strip_tags($taginfo['tag']['wiki']['summary']), 0, 200)) . '...';
 		}
-		$str .= ' Top artists: (' . join(', ',$topartists) . ')';
-	}
-	if ($taginfo['tag']['url']) { // Make sure URL exists.
-		$str .= ' (' . internets_shorten_url($taginfo['tag']['url']) . ')';
-	}
-	if ($taginfo['error'])	{
-		$str = '"' . $arguments . '" Either doesn\'t exist or no description available.';
+		if ($similar['similartags']['tag'] && !$similar['similartags']['#text']) { // Check if there are similar tags.
+			$tagamount = 0;
+			$tags = array();
+			foreach ($similar['similartags']['tag'] as $tag) {
+				if ($tagamount++ == 5) {
+					break;
+				}
+				array_push($tags,$tag['name']);
+			}
+			$str .= ' Similar tags: (' . join(', ',$tags) . ')';
+		}
+		if ($tagartists['topartists']['artist']) { // Check if there are similar artists.
+			$artistnum = 0;
+			$topartists = array();
+			foreach ($tagartists['topartists']['artist'] as $artist) {
+				if ($artistnum++ == 5) {
+					break;
+				}
+				array_push($topartists,$artist['name']);
+			}
+			$str .= ' Top artists: (' . join(', ',$topartists) . ')';
+		}
+		if ($taginfo['tag']['url']) { // Make sure URL exists.
+			$str .= ' (' . internets_shorten_url($taginfo['tag']['url']) . ')';
+		}
+		if ($taginfo['error'])	{
+			$str = '"' . $arguments . '" Either doesn\'t exist or no description available.';
+		}
 	}
 	send_msg($channel,$str);
 }
