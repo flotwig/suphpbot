@@ -113,9 +113,13 @@ function link_sniffer () {
 
 			$title = trim($title);
 	
-			// Send the title to the channel
+			// Checks if the title is not empty, and send the title to the channel
 
-			send('PRIVMSG ' . $channel . ' :' ."Link Title: ". $title);
+			if (!empty($title)) {
+	
+				send('PRIVMSG ' . $channel . ' :' ."Link Title: ". $title);
+
+			}
 		}
 
 	}	
