@@ -76,3 +76,6 @@ The bot comes prepackaged with tons of configuration options, changeable with th
 	* logging - 1 to log raw input/output to a file, 0 to disable
 	* logfile - name of the file to log to
 	* message_style - Style of outputted messages - %nick% will be replaced with the user's nick and %message% will be replaced with the output message.
+	* direct_search - Boolean value to allow searching without command character.
+	* allowed_users - List of users that can use special features (Not admins).
+	
