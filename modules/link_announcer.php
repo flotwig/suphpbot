@@ -38,11 +38,13 @@ function link_sniffer () {
 	// Check if there is a url in the text
 	if(preg_match($reg_exUrl, $context, $url)) {
 
+		// Get the HTML and Parse it
 
-		$urlContents = file_get_contents($url[0]);
+		$HTMLContents = file_get_contents($url[0]);
 		
 		$dom = new DOMDocument();
-		$dom->loadHTML($urlContents);
+
+		$dom->loadHTML($HTMLContents);
 
 		$title_node = $dom->getElementsByTagName('title');
 	
@@ -61,8 +63,7 @@ function link_sniffer () {
 		// Removes the extra space from the last loop
 
 		$title = trim($title);
-
-
+		
 		// Send the title to the channel
 
 		send('PRIVMSG ' . $channel . ' :' ."Link Title: ". $title);
@@ -71,5 +72,3 @@ function link_sniffer () {
 	
 
 }
-
-?>
