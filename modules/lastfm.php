@@ -1,6 +1,7 @@
 <?php
 // lastfm stuffs
 // kwamaking (kwamaking@gmail.com) http://github.com/kwamaking
+// this requires the internets module, as it uses a few functions from it.  
 define('LASTFM_API_KEY','362a86ba35347c41a363b46dc32e333e');
 $function_map['lastfm'] = array( 
 	'setuser'=>'set_lastfm_user',
@@ -83,11 +84,18 @@ function get_lastfm_user($nick) {
 }
 // This grabs the json from the last.fm api with given params
 function get_lastfm_data($method,$paramstr) {
-	// uses a  function in the internets module,.
-	// It already does what I want it to, so no need to re-write one.
-	$def = @internets_get_contents('http://ws.audioscrobbler.com/2.0/?format=json&api_key='. LASTFM_API_KEY .'&method=' . $method . '&' . $paramstr);
-	$def = json_decode($def,TRUE);
-	return $def;
+	global $loaded_modules,$channel;
+	// lets make sure internets module is loaded before we go making calls to it's functions
+	if (in_array("internets",$loaded_modules)) {
+		// uses a  function in the internets module,.
+		// It already does what I want it to, so no need to re-write one.
+		$def = @internets_get_contents('http://ws.audioscrobbler.com/2.0/?format=json&api_key='. LASTFM_API_KEY .'&method=' . $method . '&' . $paramstr);
+		$def = json_decode($def,TRUE);
+		return $def;
+	} else {
+		send_msg($channel,"This will not work without the internets module.");
+		return false;
+	}
 }
 // I wanted a second function for this since i'll be using it often
 // Eventually I'll write this to the cache file
