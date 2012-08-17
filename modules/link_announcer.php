@@ -48,13 +48,52 @@ function link_sniffer () {
 
 		} else {
 
-			// Get the HTML and Parse it
+			// Get the HTML
 
 			$HTMLContents = internets_get_contents($url[0]);
 	
+			// Parsing the HTML and handling errors
+
 			$dom = new DOMDocument();
 
-			$dom->loadHTML($HTMLContents);
+			libxml_use_internal_errors(true);
+
+			if (! $dom->loadHTML($HTMLContents) ){
+
+				foreach (libxml_get_errors() as $error) {
+
+					// suppressing warnings, while throwing error and fatal levels
+
+					if ( $error->level != LIBXML_ERR_WARNING) {
+						
+						// Building up the error message
+
+						$err_message = "";
+
+						switch ($error->level) {
+							case LIBXML_ERR_ERROR:
+								$err_message .= "Error $error->code: ";
+								break;
+							case LIBXML_ERR_FATAL:
+								$err_message .= "Fatal Error $error->code: ";
+								break;
+						}
+
+						$err_message .= trim($error->message) ;
+						$err_message .= ", line: " . $error->line;
+						$err_message .= ", column: " . $error->column;
+
+						// Sending the message using PHP error log file
+
+						error_log ($err_message);
+						
+					}
+				}
+
+				// clearing the error buffer to save memory
+
+				libxml_clear_errors();
+			}
 
 			$title_node = $dom->getElementsByTagName('title');
 
@@ -74,9 +113,13 @@ function link_sniffer () {
 
 			$title = trim($title);
 	
-			// Send the title to the channel
+			// Checks if the title is not empty, and send the title to the channel
 
-			send('PRIVMSG ' . $channel . ' :' ."Link Title: ". $title);
+			if (!empty($title)) {
+	
+				send('PRIVMSG ' . $channel . ' :' ."Link Title: ". $title);
+
+			}
 		}
 
 	}	
