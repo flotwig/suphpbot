@@ -23,7 +23,9 @@ $hook_map[$scriptname] = array (
 
 // sniffs the URL and gets the title
 function link_sniffer () {
-	global $channel,$buffer;
+
+	// Loading required global variables
+	global $channel,$buffer,$loaded_modules ;
 
 	// removing unneeded information from the received text
 	$bf = explode(' ',$buffer);
@@ -38,37 +40,45 @@ function link_sniffer () {
 	// Check if there is a url in the text
 	if(preg_match($reg_exUrl, $context, $url)) {
 
-		// Get the HTML and Parse it
+		// Check for internets module is loaded
 
-		$HTMLContents = file_get_contents($url[0]);
-		
-		$dom = new DOMDocument();
+		if (!in_array("internets",$loaded_modules)) {
 
-		$dom->loadHTML($HTMLContents);
+			send_msg($channel,"internets module not found, Kindly load the internets module");
 
-		$title_node = $dom->getElementsByTagName('title');
+		} else {
+
+			// Get the HTML and Parse it
+
+			$HTMLContents = internets_get_contents($url[0]);
 	
-		// Handle Multiline titles, like youtube
+			$dom = new DOMDocument();
 
-		$title_elements = explode("\n",$title_node->item(0)->nodeValue);
-		
-		$title = "";
+			$dom->loadHTML($HTMLContents);
 
-		foreach ($title_elements as $element) {
+			$title_node = $dom->getElementsByTagName('title');
 
-			$title .= trim($element) . " ";
+			// Handle Multiline titles, like youtube
 
+			$title_elements = explode("\n",$title_node->item(0)->nodeValue);
+	
+			$title = "";
+
+			foreach ($title_elements as $element) {
+
+				$title .= trim($element) . " ";
+
+			}
+
+			// Removes the extra space from the last loop
+
+			$title = trim($title);
+	
+			// Send the title to the channel
+
+			send('PRIVMSG ' . $channel . ' :' ."Link Title: ". $title);
 		}
 
-		// Removes the extra space from the last loop
-
-		$title = trim($title);
-		
-		// Send the title to the channel
-
-		send('PRIVMSG ' . $channel . ' :' ."Link Title: ". $title);
-	}
-
-	
+	}	
 
 }
