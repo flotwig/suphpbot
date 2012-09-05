@@ -276,14 +276,62 @@ function internets_forecast() {
 		$w = json_decode(internets_get_contents('http://api.wunderground.com/api/' . WUNDERGROUND_APIKEY . '/geolookup/forecast7day/q/' . $query . '.json'),TRUE);
 
 		if (isset($w['response']['error'])) {
+
+			// Handling errors
+
 			send_msg($channel,"Error: ".$w['response']['error']['description']);
-		} else {
+
+		} elseif (isset($w['location'])){
+
+			// Displaying forcast information
+
+
 			$response = array();
 			$response[] = $w['location']['city'] . ' forecast';
 			foreach ($w['forecast']['simpleforecast']['forecastday'] as $day) {
 				$response[] = $day['date']['weekday'] . ': ' . $day['conditions'] . ' ' . $day['low']['fahrenheit'] . '-' . $day['high']['fahrenheit'] . 'F ('  . $day['low']['celsius'] . '-' . $day['high']['celsius'] . 'C)';
 			}
 			send_msg($channel,implode(', ',$response));
+
+		} elseif (isset($w['response']['results'])) {
+
+			// Handles city clarification
+
+			$cities = array();
+
+			// creating the list while limiting to 10 cities
+
+			for ($i=0; ($i < count($w['response']['results'])) && ($i < 10) ; $i++) {
+
+				$location = $w['response']['results'][$i];
+
+				if ($location['country_name'] == 'USA' ) {
+
+
+					// Display the state instead of the country for USA
+
+					$cities[] = $location['name'].','.$location['state'];
+
+				} else {
+
+					$cities[] = $location['name'].','.$location['country_name'];
+
+				}
+				
+
+			}
+			
+			// Perparing the message & sending it.
+
+			$message = "Kindly clarify the location, for example: ";
+			$message .= implode(' - ',$cities);
+
+			send_msg($channel,$message);
+
+
+		} else {
+
+			send_msg($channel,"Unknown response, Kindly contact the developers to report the issue.");
 		}
 	}
 }
