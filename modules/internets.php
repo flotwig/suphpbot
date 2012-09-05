@@ -262,8 +262,13 @@ function internets_weather() {
 }
 function internets_forecast() {
 	global $channel,$arguments;
+
 	if (empty($arguments)) {
+
+		// Display instructions if no arrguments were provided
+
 		send_msg($channel,'Usage: "f [location]" ("f City", "f City, US State", "f City, Country" ,"f zipcode")');
+
 	} else {
 		
 		// preparing query to be sent
@@ -285,12 +290,38 @@ function internets_forecast() {
 
 			// Displaying forcast information
 
+			// Building the city full name
+
+			$fullName = '';
+
+			if ($w['location']['type'] == 'CITY') {
+
+				// A USA city
+				$fullName = $w['location']['city'].', '.$w['location']['state'];
+
+			} elseif ($w['location']['type'] == 'INTLCITY') {
+
+				// Internation city
+				$fullName = $w['location']['city'].', '.$w['location']['country_name'];
+
+			} else {
+
+				// Unhandled type (Fail over)
+				$fullName = $w['location']['city'];
+			}
+
+
+			// Bundling the forcast
 
 			$response = array();
-			$response[] = $w['location']['city'] . ' forecast';
+			$response[] = $fullName . ' forecast';
+
 			foreach ($w['forecast']['simpleforecast']['forecastday'] as $day) {
 				$response[] = $day['date']['weekday'] . ': ' . $day['conditions'] . ' ' . $day['low']['fahrenheit'] . '-' . $day['high']['fahrenheit'] . 'F ('  . $day['low']['celsius'] . '-' . $day['high']['celsius'] . 'C)';
 			}
+
+			// Sending the forcast
+
 			send_msg($channel,implode(', ',$response));
 
 		} elseif (isset($w['response']['results'])) {
@@ -330,6 +361,8 @@ function internets_forecast() {
 
 
 		} else {
+
+			// Handled an unknown response
 
 			send_msg($channel,"Unknown response, Kindly contact the developers to report the issue.");
 		}
