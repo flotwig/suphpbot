@@ -265,7 +265,16 @@ function internets_forecast() {
 	if (empty($arguments)) {
 		send_msg($channel,'Usage: "f [location]" ("f City", "f City, US State", "f City, Country" ,"f zipcode")');
 	} else {
-		$w = json_decode(internets_get_contents('http://api.wunderground.com/api/' . WUNDERGROUND_APIKEY . '/geolookup/forecast7day/q/' . urlencode($arguments) . '.json'),TRUE);
+		
+		// preparing query to be sent
+
+		$query = str_replace(" ","_", $arguments);
+		$query = urlencode($query);
+
+		// Retriving the data
+
+		$w = json_decode(internets_get_contents('http://api.wunderground.com/api/' . WUNDERGROUND_APIKEY . '/geolookup/forecast7day/q/' . $query . '.json'),TRUE);
+
 		if (isset($w['response']['error'])) {
 			send_msg($channel,"Error: ".$w['response']['error']['description']);
 		} else {
