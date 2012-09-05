@@ -179,16 +179,32 @@ function internets_qdb() {
 	$quote = str_replace(array("\n","\r"),'',$quote);
 	send_msg($channel,$qu['link'] . ' - ' . $quote);
 }
+
 function internets_weather() {
 	global $channel,$arguments;
 	if (empty($arguments)) {
-		send_msg($channel,'Usage: "w [location]" ("w 30548", "w Hoschton, GA", "w New York City")');
+		send_msg($channel,'Usage: "w [location]" ("w City", "w City, US State", "w City, Country" ,"w zipcode")');
 	} else {
-		$w = json_decode(internets_get_contents('http://api.wunderground.com/api/' . WUNDERGROUND_APIKEY . '/conditions/q/' . urlencode($arguments) . '.json'),TRUE);
+
+		// preparing query to be sent
+
+		$query = str_replace(" ","_", $arguments);
+		$query = urlencode($query);
+
+		// Retriving the data
+
+		$w = json_decode(internets_get_contents('http://api.wunderground.com/api/' . WUNDERGROUND_APIKEY . '/conditions/q/' . $query . '.json'),TRUE);
 		
 		if (isset($w['response']['error'])) {
+			
+			// Handling errors
+
 			send_msg($channel,"Error: ".$w['response']['error']['description']);
-		} else {
+
+		} elseif (isset($w['current_observation'])) {
+
+			// Displaying the weather information
+
 			$response = array(
 				$w['current_observation']['display_location']['full'],
 				'Conditions: ' . $w['current_observation']['weather'],
@@ -203,6 +219,44 @@ function internets_weather() {
 			);
 
 			send_msg($channel,implode(', ',$response));
+
+		} elseif (isset($w['response']['results'])) {
+
+			// Handles city clarification
+
+			$cities = array();
+
+			// creating the list while limiting to 10 cities
+
+			for ($i=0; ($i < count($w['response']['results'])) && ($i < 10) ; $i++) {
+
+				$location = $w['response']['results'][$i];
+
+				if ($location['country_name'] == 'USA' ) {
+
+					// Display the state instead of the country for USA
+
+					$cities[] = $location['name'].','.$location['state'];
+
+				} else {
+
+					$cities[] = $location['name'].','.$location['country_name'];
+
+				}
+				
+
+			}
+			
+			// Perparing the message & sending it.
+
+			$message = "Kindly clarify the location, for example: ";
+			$message .= implode(' - ',$cities);
+
+			send_msg($channel,$message);
+
+		} else {
+
+			send_msg($channel,"Unknown response, Kindly contact the developers to report the issue.");
 		}
 	}
 }
