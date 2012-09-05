@@ -263,7 +263,7 @@ function internets_weather() {
 function internets_forecast() {
 	global $channel,$arguments;
 	if (empty($arguments)) {
-		send_msg($channel,'Usage: "f [location]" ("f 30548", "f Hoschton, GA", "f New York City")');
+		send_msg($channel,'Usage: "f [location]" ("f City", "f City, US State", "f City, Country" ,"f zipcode")');
 	} else {
 		$w = json_decode(internets_get_contents('http://api.wunderground.com/api/' . WUNDERGROUND_APIKEY . '/geolookup/forecast7day/q/' . urlencode($arguments) . '.json'),TRUE);
 		if (isset($w['response']['error'])) {
