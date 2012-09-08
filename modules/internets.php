@@ -179,16 +179,32 @@ function internets_qdb() {
 	$quote = str_replace(array("\n","\r"),'',$quote);
 	send_msg($channel,$qu['link'] . ' - ' . $quote);
 }
+
 function internets_weather() {
 	global $channel,$arguments;
 	if (empty($arguments)) {
-		send_msg($channel,'Usage: "w [location]" ("w 30548", "w Hoschton, GA", "w New York City")');
+		send_msg($channel,'Usage: "w [location]" ("w City", "w City, US State", "w City, Country" ,"w zipcode")');
 	} else {
-		$w = json_decode(internets_get_contents('http://api.wunderground.com/api/' . WUNDERGROUND_APIKEY . '/conditions/q/' . urlencode($arguments) . '.json'),TRUE);
+
+		// preparing query to be sent
+
+		$query = str_replace(" ","_", $arguments);
+		$query = urlencode($query);
+
+		// Retriving the data
+
+		$w = json_decode(internets_get_contents('http://api.wunderground.com/api/' . WUNDERGROUND_APIKEY . '/conditions/q/' . $query . '.json'),TRUE);
 		
 		if (isset($w['response']['error'])) {
+			
+			// Handling errors
+
 			send_msg($channel,"Error: ".$w['response']['error']['description']);
-		} else {
+
+		} elseif (isset($w['current_observation'])) {
+
+			// Displaying the weather information
+
 			$response = array(
 				$w['current_observation']['display_location']['full'],
 				'Conditions: ' . $w['current_observation']['weather'],
@@ -203,24 +219,152 @@ function internets_weather() {
 			);
 
 			send_msg($channel,implode(', ',$response));
+
+		} elseif (isset($w['response']['results'])) {
+
+			// Handles city clarification
+
+			$cities = array();
+
+			// creating the list while limiting to 10 cities
+
+			for ($i=0; ($i < count($w['response']['results'])) && ($i < 10) ; $i++) {
+
+				$location = $w['response']['results'][$i];
+
+				if ($location['country_name'] == 'USA' ) {
+
+					// Display the state instead of the country for USA
+
+					$cities[] = $location['name'].','.$location['state'];
+
+				} else {
+
+					$cities[] = $location['name'].','.$location['country_name'];
+
+				}
+				
+
+			}
+			
+			// Perparing the message & sending it.
+
+			$message = "Kindly clarify the location, for example: ";
+			$message .= implode(' - ',$cities);
+
+			send_msg($channel,$message);
+
+		} else {
+
+			send_msg($channel,"Unknown response, Kindly contact the developers to report the issue.");
 		}
 	}
 }
 function internets_forecast() {
 	global $channel,$arguments;
+
 	if (empty($arguments)) {
-		send_msg($channel,'Usage: "f [location]" ("f 30548", "f Hoschton, GA", "f New York City")');
+
+		// Display instructions if no arrguments were provided
+
+		send_msg($channel,'Usage: "f [location]" ("f City", "f City, US State", "f City, Country" ,"f zipcode")');
+
 	} else {
-		$w = json_decode(internets_get_contents('http://api.wunderground.com/api/' . WUNDERGROUND_APIKEY . '/geolookup/forecast7day/q/' . urlencode($arguments) . '.json'),TRUE);
+		
+		// preparing query to be sent
+
+		$query = str_replace(" ","_", $arguments);
+		$query = urlencode($query);
+
+		// Retriving the data
+
+		$w = json_decode(internets_get_contents('http://api.wunderground.com/api/' . WUNDERGROUND_APIKEY . '/geolookup/forecast7day/q/' . $query . '.json'),TRUE);
+
 		if (isset($w['response']['error'])) {
+
+			// Handling errors
+
 			send_msg($channel,"Error: ".$w['response']['error']['description']);
-		} else {
+
+		} elseif (isset($w['location'])){
+
+			// Displaying forcast information
+
+			// Building the city full name
+
+			$fullName = '';
+
+			if ($w['location']['type'] == 'CITY') {
+
+				// A USA city
+				$fullName = $w['location']['city'].', '.$w['location']['state'];
+
+			} elseif ($w['location']['type'] == 'INTLCITY') {
+
+				// Internation city
+				$fullName = $w['location']['city'].', '.$w['location']['country_name'];
+
+			} else {
+
+				// Unhandled type (Fail over)
+				$fullName = $w['location']['city'];
+			}
+
+
+			// Bundling the forcast
+
 			$response = array();
-			$response[] = $w['location']['city'] . ' forecast';
+			$response[] = $fullName . ' forecast';
+
 			foreach ($w['forecast']['simpleforecast']['forecastday'] as $day) {
 				$response[] = $day['date']['weekday'] . ': ' . $day['conditions'] . ' ' . $day['low']['fahrenheit'] . '-' . $day['high']['fahrenheit'] . 'F ('  . $day['low']['celsius'] . '-' . $day['high']['celsius'] . 'C)';
 			}
+
+			// Sending the forcast
+
 			send_msg($channel,implode(', ',$response));
+
+		} elseif (isset($w['response']['results'])) {
+
+			// Handles city clarification
+
+			$cities = array();
+
+			// creating the list while limiting to 10 cities
+
+			for ($i=0; ($i < count($w['response']['results'])) && ($i < 10) ; $i++) {
+
+				$location = $w['response']['results'][$i];
+
+				if ($location['country_name'] == 'USA' ) {
+
+
+					// Display the state instead of the country for USA
+
+					$cities[] = $location['name'].','.$location['state'];
+
+				} else {
+
+					$cities[] = $location['name'].','.$location['country_name'];
+
+				}
+				
+
+			}
+			
+			// Perparing the message & sending it.
+
+			$message = "Kindly clarify the location, for example: ";
+			$message .= implode(' - ',$cities);
+
+			send_msg($channel,$message);
+
+
+		} else {
+
+			// Handled an unknown response
+
+			send_msg($channel,"Unknown response, Kindly contact the developers to report the issue.");
 		}
 	}
 }
