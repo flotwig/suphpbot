@@ -104,13 +104,17 @@ function get_top_tags($artist) {
 	$tagamount = 0;
 	$tags = array();
 	if ($def['toptags']) { // Check if artist has top tags
-		foreach ($def['toptags']['tag'] as $tag) {
-			if ($tagamount++ == 5) {
-				break;
+		if (isset($def['toptags']['tag']['name'])) { // Checks for a single tag
+			$tags = $def['toptags']['tag']['name'];
+		} else { // handles Multiple tags
+			foreach ($def['toptags']['tag'] as $tag) {
+				if ($tagamount++ == 5) {
+					break;
+				}
+				array_push($tags,$tag['name']);
 			}
-			array_push($tags,$tag['name']);
+			$tags = join(', ',$tags);
 		}
-		$tags = join(', ',$tags);
 		return $tags;
 	} else {
 		return 0; // return false if no top tags
@@ -365,4 +369,4 @@ function genre() {
 	}
 	send_msg($channel,$str);
 }
-	
+
