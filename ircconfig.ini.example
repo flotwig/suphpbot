@@ -1,0 +1,36 @@
+; IRC bot config file
+; For more info, check the README
+[phpbot]
+interface = "irc"
+server = "irc.fun1schat.com"
+port = 6667
+ssl = 0
+channels = "#suphpbot"
+ignore = ""
+nick = "suphpbot"
+ident = "suphpbot"
+realname = "suphpbot 0.3b - https://github.com/flotwig/suphpbot"
+quitmsg = "suphpbot 0.3b - https://github.com/flotwig/suphpbot"
+pass = ""
+version = "suphpbot version 0.4b - https://github.com/flotwig/suphpbot"
+commandchar = "~"
+nickserv_nick = "NickServ"
+nickserv_pass = ""
+module_preload = "core,ctcp,channel,users,web,text,games,misc,website"
+maxlen = 607
+maxsend = 3
+floodtimer = 1
+configprivate = "pass,nickserv_pass"
+blockedcommands = "status"
+control_codes = 0
+strikes = 3
+automode = "+B"
+censor_badwords = "fuck,shit,nigger,cunt,bitch,bastard,twat"
+censor_output = 0
+censor_word = "<blocked>"
+logging = 0
+logfile = "raw.log"
+message_style = "%nick%: %message%"
+direct_search = 0
+;Allowed users for certain features (not admins)
+allowed_users = ""
