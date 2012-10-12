@@ -130,19 +130,19 @@ function save_settings($array, $file) {
 // supertrim function by jose cruz
 // josecruz at josecruz dot com dot br
 function xtrim($str) {
-    $str = trim($str);
-    for($i=0;$i < strlen($str);$i++) {
-        if(substr($str, $i, 1) != " ") {
-            $ret_str .= trim(substr($str, $i, 1));
-        } else  {
-            while(substr($str,$i,1) == " ") {
-                $i++;
-            }
-            $ret_str.= " ";
-            $i--; // ***
-        }
-    }
-    return $ret_str;
+	$str = trim($str);
+	for($i=0;$i < strlen($str);$i++) {
+		if(substr($str, $i, 1) != " ") {
+			$ret_str .= trim(substr($str, $i, 1));
+		} else  {
+			while(substr($str,$i,1) == " ") {
+				$i++;
+			}
+			$ret_str.= " ";
+			$i--; // ***
+		}
+	}
+	return $ret_str;
 } 
 function load_settings() {
 	global $settings,$premods,$ignore,$config;

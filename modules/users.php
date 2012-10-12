@@ -1,15 +1,15 @@
 <?php
 $function_map['users'] = array(
-    'identify'=>'users_identify',
-    'register'=>'users_register',
+	'identify'=>'users_identify',
+	'register'=>'users_register',
 	'setadmin'=>'users_setadmin'
 );
 $hook_map['users'] = array(
 	'data_in'=>'users_hook_data_in'
 );
 $help_map['users'] = array(
-    'identify'=>'In a private message, send "identify yourusername yourpassword" to the bot to log in. You must have registered an account with "register" previously.',
-    'register'=>'In a private message, send "register username password" to the bot in order to create an account. You can then log in with "identify".',
+	'identify'=>'In a private message, send "identify yourusername yourpassword" to the bot to log in. You must have registered an account with "register" previously.',
+	'register'=>'In a private message, send "register username password" to the bot in order to create an account. You can then log in with "identify".',
 	'setadmin'=>'Set a user as an administrator.'
 );
 $usersessions = array();
@@ -24,15 +24,15 @@ function users_functions_load() {
 	return $userarray;
 }
 function users_functions_save($userarray) {
-    $handle = fopen('./data/users.csv','w');
-    foreach ($userarray as $userline) {
-        $return = fputcsv($handle,$userline);
-    }
-    fclose($handle);
+	$handle = fopen('./data/users.csv','w');
+	foreach ($userarray as $userline) {
+		$return = fputcsv($handle,$userline);
+	}
+	fclose($handle);
 	return $return;
 }
 function users_identify() {
-    global $args,$channel,$usersessions,$hostname,$in_convo;
+	global $args,$channel,$usersessions,$hostname,$in_convo;
 	$userarray = users_functions_load();
 	if (!$in_convo) {
 		send_msg($channel,'This command must be sent via /msg.');

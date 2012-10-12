@@ -59,7 +59,7 @@ $hook_map['internets'] = array(
 function internets_bing_search($string) {
 
 	$accountKey = ADM_ACCKEY;
-            
+			
 	$ServiceRootURL =  'https://api.datamarket.azure.com/Bing/Search/';
 
 	$WebSearchURL = $ServiceRootURL . 'Web?$format=json&$top=3&Query=';
@@ -69,8 +69,8 @@ function internets_bing_search($string) {
 	echo($request);
 	$context = stream_context_create(array(
 		'http' => array(
-		    'request_fulluri' => true,
-		    'header'  => "Authorization: Basic " . base64_encode($accountKey . ":" . $accountKey)
+			'request_fulluri' => true,
+			'header'  => "Authorization: Basic " . base64_encode($accountKey . ":" . $accountKey)
 		)
 	));
 

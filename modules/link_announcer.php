@@ -17,7 +17,7 @@ $help_map[$scriptname] = array (
 );
 
 $hook_map[$scriptname] = array (
-    'data_in' => 'link_sniffer',
+	'data_in' => 'link_sniffer',
 );
 
 
