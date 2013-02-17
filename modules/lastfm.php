@@ -331,6 +331,8 @@ function genre() {
 	$tagartists = get_lastfm_data('tag.gettopartists','tag=' . urlencode($arguments));
 	if (!$args[0]) {
 		$str = 'Please include a genre or tag name.';
+	} elseif (!is_array($taginfo)) { // just incase the response is not an array.
+		$str = 'unexcpeted reponse for genre info, Contact admin';
 	} else {
 		if ($taginfo['tag']['name']) { // Grab tagname... 
 			$str = '"' . $taginfo['tag']['name'] . '" - ';
@@ -338,27 +340,35 @@ function genre() {
 		if (is_array($taginfo['tag']['wiki'])) { // Check if tag description exists.
 			$str .= html_entity_decode(substr(strip_tags($taginfo['tag']['wiki']['summary']), 0, 200)) . '...';
 		}
-		if ($similar['similartags']['tag'] && !$similar['similartags']['#text']) { // Check if there are similar tags.
-			$tagamount = 0;
-			$tags = array();
-			foreach ($similar['similartags']['tag'] as $tag) {
-				if ($tagamount++ == 5) {
-					break;
+		if (is_array($similar)) {
+			if ($similar['similartags']['tag'] && !$similar['similartags']['#text']) { // Check if there are similar tags.
+				$tagamount = 0;
+				$tags = array();
+				foreach ($similar['similartags']['tag'] as $tag) {
+					if ($tagamount++ == 5) {
+						break;
+					}
+					array_push($tags,$tag['name']);
 				}
-				array_push($tags,$tag['name']);
+				$str .= ' Similar tags: (' . join(', ',$tags) . ')';
 			}
-			$str .= ' Similar tags: (' . join(', ',$tags) . ')';
+		} else { // unexpected response from the server
+			$str .= ' Similar tags weren\'t found ';
 		}
-		if ($tagartists['topartists']['artist']) { // Check if there are similar artists.
-			$artistnum = 0;
-			$topartists = array();
-			foreach ($tagartists['topartists']['artist'] as $artist) {
-				if ($artistnum++ == 5) {
-					break;
+		if (is_array($tagartists)) {
+			if ($tagartists['topartists']['artist']) { // Check if there are similar artists.
+				$artistnum = 0;
+				$topartists = array();
+				foreach ($tagartists['topartists']['artist'] as $artist) {
+					if ($artistnum++ == 5) {
+						break;
+					}
+					array_push($topartists,$artist['name']);
 				}
-				array_push($topartists,$artist['name']);
+				$str .= ' Top artists: (' . join(', ',$topartists) . ')';
 			}
-			$str .= ' Top artists: (' . join(', ',$topartists) . ')';
+		} else { // unexcepted response from the server
+			$str .= ' Top artists weren\'t found ';
 		}
 		if ($taginfo['tag']['url']) { // Make sure URL exists.
 			$str .= ' (' . internets_shorten_url($taginfo['tag']['url']) . ')';
