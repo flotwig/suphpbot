@@ -13,4 +13,28 @@
 //
 */
 
+// plugin required varibles
+$scriptname = str_replace(".php","",basename(__FILE__));
+
+$function_map[$scriptname]= array(
+     'm-band' => 'ma_band'
+);
+
+$help_map[$scriptname] = array (
+     'm-band' => 'Search Metal-Archives for band'
+);
+
+// Predefined Variables
+$MA_BASE_URL = "http://www.metal-archives.com/";
+
+function ma_band () {
+     global $args,$channel,$nick;
+
+     $band = $args[0];
+
+     $str = "searching " . $band;
+     
+     send_msg($channel,$str);
+}
+
 ?>
