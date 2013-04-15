@@ -73,6 +73,9 @@ function silly_sniffer () {
     if ($sniffed_command == 'csi') {
          csi();
     }
+    if ($sniffed_command == 'o/') {
+         silly_hi_five();
+    }
     if (array_slice(array_slice($buffwords, 1) , 0, 3) == explode(' ','KICK ' . $channel . ' DerTauman')) {
         $dertauman = 'kicked';
         $original_channel = $channel;
@@ -204,5 +207,13 @@ function derTauman() {
         $buffwords[$key+2] = intVal($buffwords[$key+2]) + 1;
         send('TOPIC '. $original_channel .' :' . substr(implode(' ',array_slice($buffwords, 4)), 1));
     }
+}
+
+// Replying to High Fives
+function silly_hi_five () {
+    global $channel,$nick,$settings;
+
+    send('PRIVMSG ' . $channel . ' :' . "\o");
+
 }
 ?>
