@@ -77,23 +77,29 @@ function ma_band () {
 
      global $args,$channel,$nick,$arguments;
 
-     $band = $arguments;
+     $bandName = $arguments;
 
      $str = "";
 
      // Empty check
-     if ((is_null($band)) || ($band == "")) {
+     if ((is_null($bandName)) || ($bandName == "")) {
 
           $str ="Kindly provide the band name";
 
      } else {
           $str = "searching " . $band;
           $queryUrl = "search/ajax-advanced/searching/bands/?bandName=" .
-          urlencode($band) . "&exactBandMatch=0&sEcho=1&iColumns=3&sColumns=&iDisplayStart=0&iDisplayLength=20&sNames=%2C%2C";
+          urlencode($bandName) . "&exactBandMatch=0&sEcho=1&iColumns=3&sColumns=&iDisplayStart=0&iDisplayLength=20&sNames=%2C%2C";
 
           $response = ma_getData($queryUrl);
 
-          $str = $response["iTotalRecords"];
+          // Error handling
+          if ($response['error']!=""){
+              $str = "Error retriving the results:" . $response['error'];
+          } else {
+              $str = $response["iTotalRecords"];
+          }
+          
      }
 
      send_msg($channel,$str);
