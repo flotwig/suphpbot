@@ -96,6 +96,8 @@ function ma_band () {
           // Error handling
           if ($response['error']!=""){
               $str = "Error retriving the results:" . $response['error'];
+          } elseif ($response["iTotalRecords"] <= 0) {
+              $str = "No bands were found, please try a different band name";
           } else {
                
                //Processing bands
