@@ -47,34 +47,6 @@ function ma_getData($queryURL) {
 
 function ma_band () {
 
-     /**************************************************************
-     ************************* Sample Data *************************
-
-     * Sample query URL
-	http://www.metal-archives.com/search/ajax-advanced/searching/bands/?bandName=test&exactBandMatch=0&sEcho=1&iColumns=3&sColumns=&iDisplayStart=0&iDisplayLength=20&sNames=%2C%2C
-
-     * Sample response
-	{ 
-		"error": "",
-		"iTotalRecords": 11,
-		"iTotalDisplayRecords": 11,
-		"sEcho": 0,
-		"aaData": [
-					[ 
-				"<a href=\"http://www.metal-archives.com/bands/Test/3540355114\">Test</a>  <!-- 8.284618 -->" ,	
-				"Grindcore/Death Metal/Crustcore" ,
-				"Brazil"    		]
-					,
-							[ 
-				"<a href=\"http://www.metal-archives.com/bands/De-Test/22778\">De/Test</a> (<strong>a.k.a.</strong> DeTest) <!-- 3.9795065 -->" ,	
-				"Thrash Metal" ,
-				"Germany"    		]
-					]
-	}
-
-     ************************* End Sample Data *************************
-     ******************************************************************/
-
      global $args,$channel,$nick,$arguments;
 
      $bandQuery = $arguments;
@@ -146,7 +118,6 @@ function ma_band () {
      }
 
      send_msg($channel,$str);
-
 }
 
 ?>
