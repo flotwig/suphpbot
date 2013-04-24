@@ -77,19 +77,19 @@ function ma_band () {
 
      global $args,$channel,$nick,$arguments;
 
-     $bandName = $arguments;
+     $bandQuery = $arguments;
 
      $str = "";
 
      // Empty check
-     if ((is_null($bandName)) || ($bandName == "")) {
+     if ((is_null($bandQuery)) || ($bandQuery == "")) {
 
           $str ="Kindly provide the band name";
 
      } else {
-          $str = "searching " . $band;
+
           $queryUrl = "search/ajax-advanced/searching/bands/?bandName=" .
-          urlencode($bandName) . "&exactBandMatch=0&sEcho=1&iColumns=3&sColumns=&iDisplayStart=0&iDisplayLength=20&sNames=%2C%2C";
+          urlencode($bandQuery) . "&exactBandMatch=0&sEcho=1&iColumns=3&sColumns=&iDisplayStart=0&iDisplayLength=200&sNames=%2C%2C";
 
           $response = ma_getData($queryUrl);
 
@@ -97,7 +97,48 @@ function ma_band () {
           if ($response['error']!=""){
               $str = "Error retriving the results:" . $response['error'];
           } else {
-              $str = $response["iTotalRecords"];
+               
+               //Processing bands
+
+              $bands = $response["aaData"];
+
+              $totalBands = $response["iTotalRecords"];
+
+              // Limiting display to 5 bands, maybe use more in future
+              $displayedBands = 5;
+
+              if ($totalBands < 5) {
+                 $displayedBands = $totalBands;
+              }
+
+
+              for ($i = 0 ; $i <  $displayedBands  ; $i++) {
+                $band = $bands[$i];
+
+                $bandLnN = $band[0];
+		
+                $bandLinkStart = strripos ($bandLnN,"href=\"");
+		$bandLinkEnd = strripos ($bandLnN,"\">");
+		$bandLinkLen = $bandLinkEnd - ($bandLinkStart + 6);
+                $bandLink = substr ($bandLnN, $bandLinkStart + 6, $bandLinkLen );
+
+		$bandNameEnd = strripos ($bandLnN,"<!--");
+		$bandNameLen = $bandNameEnd - ($bandLinkEnd  + 2 );
+                $bandName = substr ($bandLnN, $bandLinkEnd + 2, $bandNameLen );
+
+		$unwanted = array ("</a>", "<strong>", "</strong>");
+		$bandName = str_replace($unwanted, "" , $bandName);
+
+                $bandGenre = $band[1];
+                $bandCountry = $band[2];
+
+		if ($str != ""){
+		   $str .= ", ";
+		}
+
+		$str .= $bandName . " - " . $bandCountry . " - " . $bandGenre  ;
+              }
+
           }
           
      }
