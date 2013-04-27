@@ -240,4 +240,12 @@ function silly_hi_five () {
     send('PRIVMSG ' . $channel . ' :' . "\o");
 
 }
+
+// Replying to High Fives
+function silly_hi_five () {
+    global $channel,$nick,$settings;
+
+    send('PRIVMSG ' . $channel . ' :' . "\o");
+
+}
 ?>
