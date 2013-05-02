@@ -104,13 +104,14 @@ while (1) {
 			}
 		}
 	}
-/*
-Uncomment this if you want it to stop attempting to reconnect.
-If you're gone for extended periods of time it's generally a good idea to allow it to reconnect indefinitely.
-
-	sleep(round(pow(5,.5*$tries))); // reconnecting too fast like woah. exponential growth is quick to occur. if your irc server is down for a day and this bot is trying to reconnect the whole time, you should probably just restart the process :p
-	
-*/
+	if($tries>0){
+		$reconnectTime=round(pow(5,.5*$tries));
+	}
+	if($reconnectTime>300){
+		$tries=-1; // prevent it from recalculating $reconnectTime
+		$reconnectTime=300; // never wait more than five minutes to reconnect
+	}
+	sleep($reconnectTime);
 }
 // borrowed from gtoxic of avestribot, who borrowed it from somebody else...
 function save_settings($array, $file) {
