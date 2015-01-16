@@ -3,7 +3,6 @@
 kwamaking (kwamaking@gmail.com) http://github.com/kwamaking
 this requires the internets module, as it uses a few functions from it.
 */
-
 define('LASTFM_API_KEY','362a86ba35347c41a363b46dc32e333e');
 
 $function_map['lastfm'] = array(
@@ -15,7 +14,8 @@ $function_map['lastfm'] = array(
 	'compare'	=> 'compare_users',
 	'plays'		=> 'getPlays',
 	'whois'      	=> 'whois',
-	'genre'		=> 'getGenre'
+	'genre'		=> 'getGenre',
+	'event'		=> 'getEvent'
 );
 $help_map['lastfm'] = array(
 	'setuser'	=> 'Set your last.fm username.',
@@ -26,7 +26,8 @@ $help_map['lastfm'] = array(
 	'compare'	=> 'Compares register user with specified user, or two separate users.',
 	'plays'		=> 'Displays user plays by given band, you can also view plays of given band by users other than yourself. I.E. plays username band.',
 	'whois'		=> 'Returns users associated with Last.fm username, or any given nick.',
-	'genre'		=> 'Returns brief description and similar genres and tags of given genre or tag.'
+	'genre'		=> 'Returns brief description and similar genres and tags of given genre or tag.',
+	'event'		=> 'Searches for an event and displays a short description.'
 );
 function throwWarning($channel) {
 	$message = 'Either nick isn\'t associated or you need to specify arguments.';
@@ -93,8 +94,9 @@ function getLastfmData($method, $parameters) {
 	global $loaded_modules, $channel;
 
 	if (in_array("internets", $loaded_modules)) {
-		$message = @internets_get_contents('http://ws.audioscrobbler.com/2.0/?format=json&api_key='. LASTFM_API_KEY .'&method=' . $method . '&' . $parameters);
-		$message = json_decode($def, TRUE);
+		$message = internets_get_contents('http://ws.audioscrobbler.com/2.0/?format=json&api_key='. LASTFM_API_KEY .'&method=' . $method . '&' . $parameters);
+		// Presumably $def was incorrect! - Mike
+		$message = json_decode($message, TRUE);
 	} else {
 		send_msg($channel, "This will not work without the internets module.");
 	}
@@ -102,28 +104,31 @@ function getLastfmData($method, $parameters) {
 	return $message;
 }
 
+/**
+ * Rewritten, sensible version of getTopTags without insane loop madness.
+ *
+ * @param string $artist
+ * @return string $top_tags
+ */
 function getTopTags($artist) {
 	$tags = getLastfmData('artist.gettoptags','artist=' . urlencode($artist));
-	$tag_amount = 0;
-	$top_tags= array();
-	if ($tags['toptags']) {
-		if (isset($tags['toptags']['tag']['name'])) {
-			$top_tags = $tags['toptags']['tag']['name'];
-		} else {
-			foreach ($tags['toptags']['tag'] as $tag) {
-				if ($tag_amount++ == 5) {
-					break;
-				}
-				array_push($top_tags, $tag['name']);
-			}
-			$top_tags = join(', ', $tags);
-		}
+	$tags = $tags["toptags"]["tag"];
+	$clean_tags = array();
+
+	foreach ($tags as $tag) {
+		array_push($clean_tags, $tag["name"]);
+	} // foreach
+
+	if ($tags) {
+		$tag_slice = array_slice($clean_tags, 0, 4);
+		$top_tags = implode($tag_slice, ", ");
 	} else {
-		$top_tags = false;
-	}
+		$top_tags = "";
+	} // else
 
 	return $top_tags;
-}
+} // getTopTags()
+
 //TODO:
 //What the fuck was I on when I wrote this?
 function getNowPlaying() {
@@ -141,9 +146,10 @@ function getNowPlaying() {
 	}
 	$json_data 	= getLastfmData('user.getrecenttracks','user=' . urlencode($user) . '&limit=1');
 	$first_track 	= $json_data['recenttracks']['track'][0];
-	if ($first_track['@attr']['nowplaying']) {/
+	if ($first_track['@attr']['nowplaying']) {
 		$trackinfo	= getLastfmData('track.getinfo','artist=' . urlencode($first_track['artist']['#text']) . '&track=' . urlencode($first_track['name']) . '&username=' . urlencode($user));
 		$top_tags 	= getTopTags($first_track['artist']['#text']);
+		//$top_tags = implode($top_tags, ", ");
 		$message 	=  ' "' . $user . '" is now playing '.$first_track['artist']['#text'];
 		$message 	.= ' - ' . $first_track['name'];
 		if ($first_track['album']['#text'])  {
@@ -389,3 +395,37 @@ function getGenre() {
 	send_msg($channel, $message);
 }
 
+/**
+ * Search for an event by ID.
+ *
+ * @global array $arguments - content of the rest of the command.
+ * @global string $channel - where the command was issued.
+ * @global array $args - content of the rest of the command.
+ * @return boolean 
+ */
+function getEvent() {
+	global $arguments, $channel, $args;
+
+	$response = "";
+
+	if (!$args[0] || !is_numeric($args[0])) {
+		send_msg($channel, "Event ID is either non-numeric or missing.");
+		return false;
+	} // if
+
+	$event = getLastfmData("event.getInfo", "event=".urlencode($args[0]));
+	$event = $event["event"];
+	$venue = $event["venue"];
+	$artists = $event["artists"];
+	$top_artists = array_slice($artists["artist"], 0, 4);
+	$top_artists = implode($top_artists, ", ");
+	$tags = implode($event["tags"]["tag"], ", ");
+	$url = internets_shorten_url($event["url"]);
+
+	$response .= "{$event["title"]} at {$venue["name"]}, {$venue["location"]["city"]}."
+		." {$event["attendance"]} attendees. Artists: {$top_artists}. Tags: {$tags}."
+		." {$url}";
+
+
+	send_msg($channel, $response);
+} // getEvent()
