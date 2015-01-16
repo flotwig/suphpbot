@@ -166,7 +166,7 @@ function shell_send($message,$type='NOTE') {
 function load_module($modname) {
 	global $commands, $function_map, $hook_map, $hooks;
 	global $help, $help_map, $loaded_modules;
-	$load = @include_once('./modules/' . trim($modname) . '.php');
+	$load = include_once('./modules/' . trim($modname) . '.php');
 	if ($load) {
 		$commands = array_merge($commands,$function_map[trim($modname)]);
 		if (isset($hook_map[trim($modname)])) {
@@ -178,7 +178,9 @@ function load_module($modname) {
 		if (is_array($help_map[trim($modname)])) {
 			$help = array_merge($help,$help_map[trim($modname)]);
 		}
-	}
+	} else {
+		die("Failed to load {$modname}!");
+	} // else
 }
 function unload_module($modname) {
 	global $commands,$function_map,$hook_map,$help_map,$loaded_modules,$hooks,$help;

@@ -39,7 +39,7 @@ function interface_loop_extraction() { // function to extract data from the curr
 	} else {
 		$in_convo = FALSE;
 	}
-	$hostname = end(explode('@',$buffwords[0]));
+	$hostname = @end(explode('@',$buffwords[0]));
 	$hostmask = $hostname;
 	$bw = $buffwords;
 	$bw[0]=NULL; $bw[1]=NULL; $bw[2]=NULL; $bw[3]=NULL;
@@ -69,7 +69,7 @@ function interface_loop_upkeep() { // do what you need to do to keep the connect
 		$bnick = $settings['nick'] . '_' . mt_rand(100,999);
 		send('NICK ' . $bnick);
 	} elseif ($buffwords[0]=='PING') {
-		send('PONG ' . str_replace(array("\n","\r"),'',end(explode(' ',$buffer,2))));
+		@send('PONG ' . str_replace(array("\n","\r"),'',end(explode(' ',$buffer,2))));
 	}
 }
 function interface_loop_command() { // return the string with the command name if we need to run a command, otherwise boolean FALSE

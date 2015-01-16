@@ -65,7 +65,6 @@ function silly_five_O () {
 // based on internets snarf function.
 
 function silly_sniffer () {
-<<<<<<< HEAD
 	global $buffwords, $channel, $dertauman, $original_channel;
 	$sniffed_command = strtolower(substr($buffwords[3],1));
 	if ($sniffed_command == '911') {
@@ -87,32 +86,6 @@ function silly_sniffer () {
 		// I want all data_in to pound it like a man
 		sed();
 	}
-=======
-    global $buffwords, $channel, $dertauman, $original_channel;
-    $sniffed_command = strtolower(substr($buffwords[3],1));
-    if ($sniffed_command == '911') {
-         silly_five_O();
-    }
-    if ($sniffed_command == 'csi') {
-         csi();
-    }
-    if ($sniffed_command == 'o/') {
-         silly_hi_five();
-    }
-    if (array_slice(array_slice($buffwords, 1) , 0, 3) == explode(' ','KICK ' . $channel . ' DerTauman')) {
-        $dertauman = 'kicked';
-        $original_channel = $channel;
-        send('TOPIC ' . $channel);
-    }
-    if ($buffwords[3] == $original_channel && $dertauman == 'kicked') {
-        $dertauman = 'not kicked';
-        derTauman($original_channel);
-    } else {
-        // Wanted to keep everything involving sed in it's own function.
-        // I want all data_in to pound it like a man
-        sed();
-    }
->>>>>>> a3f020892adaa2a555fe1b3dcb95b9fe578425b4
 }
 
 // Checks if user is false
@@ -231,14 +204,6 @@ function derTauman() {
 		$buffwords[$key+2] = intVal($buffwords[$key+2]) + 1;
 		send('TOPIC '. $original_channel .' :' . substr(implode(' ',array_slice($buffwords, 4)), 1));
 	}
-}
-
-// Replying to High Fives
-function silly_hi_five () {
-    global $channel,$nick,$settings;
-
-    send('PRIVMSG ' . $channel . ' :' . "\o");
-
 }
 
 // Replying to High Fives
