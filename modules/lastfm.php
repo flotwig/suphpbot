@@ -15,7 +15,8 @@ $function_map['lastfm'] = array(
 	'plays'		=> 'getPlays',
 	'whois'      	=> 'whois',
 	'genre'		=> 'getGenre',
-	'event'		=> 'getEvent'
+	'event'		=> 'getEvent',
+	'recs'		=> 'getUserRecommendations'
 );
 $help_map['lastfm'] = array(
 	'setuser'	=> 'Set your last.fm username.',
@@ -27,7 +28,8 @@ $help_map['lastfm'] = array(
 	'plays'		=> 'Displays user plays by given band, you can also view plays of given band by users other than yourself. I.E. plays username band.',
 	'whois'		=> 'Returns users associated with Last.fm username, or any given nick.',
 	'genre'		=> 'Returns brief description and similar genres and tags of given genre or tag.',
-	'event'		=> 'Searches for an event and displays a short description.'
+	'event'		=> 'Searches for an event and displays a short description.',
+	'recs'		=> 'Displays a user\'s 10 top recommended artists.'
 );
 function throwWarning($channel) {
 	$message = 'Either nick isn\'t associated or you need to specify arguments.';
@@ -310,34 +312,34 @@ function getPlays() {
 	send_msg($channel,$message);
 }
 function whois() {
-	global $args, $channel, $nick;
-	if (!$args[0]) {
-		$message = "Please provide a Last.fm username.";
+	global $args,$channel,$nick;
+	if (!$args[0] || !preg_match('/^(?=.{4})(?!.{21})[\w.-]*[a-z][\w-.]*$/i', $args[0])) {
+		$str = "Please provide a Last.fm username.";
 	} else {
 		$user = getLastfmUser($args[0]);
 		if (!$user) {
 			$user = $args[0];
 		}
-		$file 			= './data/lastfm_data.json';
-		$fc 			= file_get_contents($file);
-		$user_list 		= json_decode($fc, true);
-		$matched_users 	= array();
-
-		foreach ($user_list['users'] as $key => $lastfm) {
+		$file = './data/lastfm_data.json';
+		$fc = file_get_contents($file);
+		$users = json_decode($fc, true);
+		$userarray = array();
+		foreach ($users['users'] as $key => $lastfm) {
 			if ($lastfm['lastfmuser'] == $user) {
-				array_push($matched_users,$key);
+				array_push($userarray,$key);
 			}
 		}
-		if ($matched_users) {
-			$message = ' "' . $user . '" is associated with: (';
-			$message .= join(', ',$matched_users);
-			$message .= ')';
+		if ($userarray) { 
+			$str = ' "' . $user . '" is associated with: (';
+			$str .= join(', ',$userarray);
+			$str .= ')';
 		} else {
-			$message = 'Could not find any association for: ' . $user;
+			$str = 'Could not find any association for: ' . $user;
 		}
 	}
-	send_msg($channel, $message);
+	send_msg($channel,$str);
 }
+
 function getGenre() {
 	global $arguments, $channel, $args;
 	$similar_tags 	= getLastfmData('tag.getsimilar','tag=' . urlencode($arguments));
@@ -429,3 +431,38 @@ function getEvent() {
 
 	send_msg($channel, $response);
 } // getEvent()
+
+/**
+ * Discover [10 of] a user's recommended artists.
+ *
+ * @global string $channel
+ * @global array $args
+ * @return
+ */
+function getUserRecommendations() {
+	global $channel, $args, $nick;
+	$user = getLastfmUser($nick);
+
+	if ($args[0]) {
+		$user = getLastfmUser($args[0]);
+		if (!$user) {
+			$user = $args[0];
+		} // if
+	} // if
+	if (!$user) {
+		return throwWarning($channel);
+	} // if
+
+	$recs = new SimpleXmlElement(@file_get_contents("http://ws.audioscrobbler.com/1.0/user/{$user}/systemrecs.rss"));
+	$recs = $recs->xpath('channel/item');
+	$recs = array_slice($recs, 0, 9);
+	$artists = array();
+
+	foreach ($recs as $r) {
+		$artists[] = (string) $r->title;
+	} // foreach
+
+	$output = "Recommendations for {$user}: ".implode($artists, ", ").".";
+
+	send_msg($channel, $output);
+} // getUserRecommendations()
