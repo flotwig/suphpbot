@@ -77,20 +77,29 @@ function deleteLastfmUser() {
 	send_msg($channel,$message);
 }
 
+/**
+ * Retrieve a Last.fm user per nickname. This was in the version I had on my
+ * server - I've switched it with the original one as that returns 1 a lot...
+ *
+ * @param string $nick - nickname to search
+ * @global string $channel
+ * @return mixed
+ */
 function getLastfmUser($nick) {
 	global $channel;
 
-	$file 		= './data/lastfm_data.json';
-	$fc 		= file_get_contents($file);
-	$users 		= json_decode($fc, true);
-	$message 	= true;
-	foreach ($users['users'] as $key => $lastfm) {
-		if (preg_match('/' .$nick . '/i', $key)) {
-			$message = $lastfm['lastfmuser'];
-		}
-	}
-	return $message;
-}
+	$file = "./data/lastfm_data.json";
+	$fc = file_get_contents($file);
+	$users = json_decode($fc, true);
+
+	foreach ($users["users"] as $key => $lastfm) {
+		if (preg_match("/{$nick}/i", $key)) {
+			return $lastfm["lastfmuser"];
+		} // if
+	} // foreach
+
+	return;
+} // getLastfmUser
 
 function getLastfmData($method, $parameters) {
 	global $loaded_modules, $channel;
