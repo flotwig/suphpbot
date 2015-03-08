@@ -446,18 +446,19 @@ function getEvent() {
  *
  * @global string $channel
  * @global array $args
+ * @global string $nick
  * @return
  */
 function getUserRecommendations() {
 	global $channel, $args, $nick;
-	$user = getLastfmUser($nick);
 
 	if ($args[0]) {
-		$user = getLastfmUser($args[0]);
-		if (!$user) {
-			$user = $args[0];
-		} // if
-	} // if
+		// A username was specified, use that instead
+		$user = $args[0];
+	} else {
+		$user = getLastfmUser($nick);
+	} // else
+
 	if (!$user) {
 		return throwWarning($channel);
 	} // if
