@@ -446,32 +446,38 @@ function getEvent() {
  *
  * @global string $channel
  * @global array $args
+ * @global string $nick
  * @return
  */
 function getUserRecommendations() {
 	global $channel, $args, $nick;
-	$user = getLastfmUser($nick);
 
 	if ($args[0]) {
-		$user = getLastfmUser($args[0]);
-		if (!$user) {
-			$user = $args[0];
-		} // if
-	} // if
+		// A username was specified, use that instead
+		$user = $args[0];
+	} else {
+		$user = getLastfmUser($nick);
+	} // else
+
 	if (!$user) {
 		return throwWarning($channel);
 	} // if
 
-	$recs = new SimpleXmlElement(@file_get_contents("http://ws.audioscrobbler.com/1.0/user/{$user}/systemrecs.rss"));
-	$recs = $recs->xpath('channel/item');
-	$recs = array_slice($recs, 0, 9);
-	$artists = array();
+	try {
+		$call = file_get_contents("http://ws.audioscrobbler.com/1.0/user/{$user}/systemrecs.rss");
+		$recs = new SimpleXmlElement($call);
+		$recs = $recs->xpath('channel/item');
+		$recs = array_slice($recs, 0, 9);
+		$artists = array();
 
-	foreach ($recs as $r) {
-		$artists[] = (string) $r->title;
-	} // foreach
+		foreach ($recs as $r) {
+			$artists[] = (string) $r->title;
+		} // foreach
 
-	$output = "Recommendations for {$user}: ".implode($artists, ", ").".";
+		$output = "Recommendations for {$user}: ".implode($artists, ", ").".";
+	} catch (Exception $e) {
+		$output = "Invalid username specified.";
+	} // catch
 
 	send_msg($channel, $output);
 } // getUserRecommendations()
